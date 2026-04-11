@@ -1,0 +1,7 @@
+usuarios
+Super Admin: admin@senac.br / admin123
+  Coordenador: carlos@senac.br / coord123
+  Aluno:       ana@senac.br / aluno123
+
+ligar o servidor
+node backend/src/server.js
