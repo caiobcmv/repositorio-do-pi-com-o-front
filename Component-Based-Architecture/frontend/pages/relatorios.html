@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Relatórios Acadêmicos</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/relatorios.css">
+</head>
+<body>
+
+    <div class="layout-geral">
+        
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <div class="logo-container">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+</div>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Painel</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-user'></i> Estudantes</a>
+                <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
+                <a href="cursos.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
+                <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
+                <a href="relatorios.html" class="link-menu active"><i class='bx bx-bar-chart-alt-2'></i> Relatórios</a>
+                              
+
+            </nav>
+
+            <div class="menu-inferior">
+                <a href="#" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+                <a href="index.html" class="link-menu"><i class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <main class="conteudo-principal">
+            
+            <header class="cabecalho-topo">
+                <div class="titulo-portal">SENAC</div>
+                <div class="caixa-busca">
+                    <i class='bx bx-search'></i>
+                    <input type="text" placeholder="Busca rápida...">
+                </div>
+                <div class="acoes-usuario">
+                    <i class='bx bx-bell icon-header'></i>
+                    <i class='bx bx-question-mark icon-header circle-icon'></i>
+                    <div class="perfil-info">
+                        <strong>ADMIN USER</strong>
+                        <small>Coordenador Acadêmico</small>
+                    </div>
+                    <div class="foto-perfil"></div>
+                </div>
+            </header>
+
+            <section class="cabecalho-pagina">
+                <div>
+                    <span class="etiqueta-laranja">VISÃO GERAL ANALÍTICA</span>
+                    <h1>Relatórios Acadêmicos</h1>
+                </div>
+                <div class="botoes-exportar">
+                    <button class="btn-outline"><i class='bx bx-export'></i> EXPORTAR PARA PDF</button>
+                    <button class="btn-solid"><i class='bx bx-file'></i> EXPORTAR PARA CSV</button>
+                </div>
+            </section>
+
+            <section class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-circulo roxo-claro"></div>
+                    <p class="kpi-titulo">TOTAL DE HORAS PROCESSADAS</p>
+                    <div class="kpi-valor">
+                        <h2>12,480</h2>
+                        <span class="badge verde">+12%</span>
+                    </div>
+                    <small>Horas verificadas esta semana</small>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-circulo cinza-claro"></div>
+                    <p class="kpi-titulo">EFICIÊNCIA MÉDIA</p>
+                    <div class="kpi-valor">
+                        <h2>94.2<small>%</small></h2>
+                    </div>
+                    <small>Taxa de resposta global</small>
+                </div>
+
+                <div class="kpi-card">
+                    <p class="kpi-titulo">PROTOCOLOS PENDENTES</p>
+                    <div class="kpi-valor">
+                        <h2>142 <span class="icone-alerta"><i class='bx bxs-error'></i> Alta</span></h2>
+                    </div>
+                    <small>Requer revisão imediata</small>
+                </div>
+
+                <div class="kpi-card">
+                    <p class="kpi-titulo">AVALIAÇÃO DOS ALUNOS</p>
+                    <div class="kpi-valor">
+                        <h2>4.9 <div class="estrelas"><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i></div></h2>
+                    </div>
+                    <small>Baseado em 580 avaliações</small>
+                </div>
+            </section>
+
+            <section class="graficos-grid">
+                <div class="card-grafico principal">
+                    <div class="header-grafico">
+                        <div>
+                            <h3>Horas Processadas Mensalmente</h3>
+                            <p>Comparação entre anos acadêmicos</p>
+                        </div>
+                        <div class="legenda">
+                            <span><div class="bolinha azul-escuro"></div> 2023</span>
+                            <span><div class="bolinha laranja"></div> 2024</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mockup-grafico">
+                        <div class="linha-tendencia">
+                            <svg viewBox="0 0 500 150" preserveAspectRatio="none">
+                                <polyline points="0,100 80,110 160,80 240,110 320,40 400,20 480,70" fill="none" stroke="#d4800a" stroke-width="3"/>
+                            </svg>
+                        </div>
+                        <div class="colunas-grafico">
+                            <div class="coluna-grupo"><div class="barra" style="height: 40%;"></div><span>JAN</span></div>
+                            <div class="coluna-grupo"><div class="barra" style="height: 50%;"></div><span>FEV</span></div>
+                            <div class="coluna-grupo"><div class="barra" style="height: 45%;"></div><span>MAR</span></div>
+                            <div class="coluna-grupo"><div class="barra" style="height: 70%;"></div><span>ABR</span></div>
+                            <div class="coluna-grupo"><div class="barra" style="height: 90%;"></div><span>MAI</span></div>
+                            <div class="coluna-grupo"><div class="barra" style="height: 60%;"></div><span>JUN</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-grafico secundario">
+                    <div class="header-grafico">
+                        <div>
+                            <h3>Eficiência por Curso</h3>
+                            <p>Em relação às metas de referência</p>
+                        </div>
+                    </div>
+                    <div class="lista-progresso">
+                        <div class="item-progresso">
+                            <div class="info-progresso"><span>SISTEMAS DE INFORMAÇÃO</span> <strong>85%</strong></div>
+                            <div class="barra-fundo"><div class="barra-preenchida" style="width: 85%;"></div></div>
+                        </div>
+                        <div class="item-progresso">
+                            <div class="info-progresso"><span>DESIGN GRÁFICO</span> <strong>82%</strong></div>
+                            <div class="barra-fundo"><div class="barra-preenchida" style="width: 82%;"></div></div>
+                        </div>
+                        <div class="item-progresso">
+                            <div class="info-progresso"><span>GASTRONOMIA</span> <strong>75%</strong></div>
+                            <div class="barra-fundo"><div class="barra-preenchida" style="width: 75%;"></div></div>
+                        </div>
+                        <div class="item-progresso">
+                            <div class="info-progresso"><span>ADMINISTRAÇÃO</span> <strong>97%</strong></div>
+                            <div class="barra-fundo"><div class="barra-preenchida" style="width: 97%;"></div></div>
+                        </div>
+                        <div class="item-progresso">
+                            <div class="info-progresso"><span>MODA</span> <strong>84%</strong></div>
+                            <div class="barra-fundo"><div class="barra-preenchida" style="width: 84%; background: var(--laranja);"></div></div>
+                        </div>
+                    </div>
+                    <button class="btn-link-central">VER MÉTRICAS DETALHADAS</button>
+                </div>
+            </section>
+
+            <section class="tabela-secao">
+                <div class="header-tabela">
+                    <h3>Log de Atividades Recentes</h3>
+                    <div class="filtro-tabela">
+                        Mostrar: <select><option>Últimos 7 Dias</option></select>
+                    </div>
+                </div>
+                
+                <table class="tabela-logs">
+                    <thead>
+                        <tr>
+                            <th>CURSO</th>
+                            <th>COORDENADOR</th>
+                            <th>HORAS</th>
+                            <th>DATA</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><div class="td-curso"><div class="box-curso"></div> Mostrar:</div></td>
+                            <td>Ricardo Oliveira</td>
+                            <td><strong>120h</strong></td>
+                            <td>Oct 12, 2023</td>
+                            <td><span class="status validado">VALIDADO</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="td-curso"><div class="box-curso"></div> Mostrar:</div></td>
+                            <td>Camila Santos</td>
+                            <td><strong>45h</strong></td>
+                            <td>Oct 11, 2023</td>
+                            <td><span class="status pendente">PENDENTE</span></td>
+                        </tr>
+                        <tr>
+                            <td><div class="td-curso"><div class="box-curso"></div> Mostrar:</div></td>
+                            <td>Marcos Lima</td>
+                            <td><strong>210h</strong></td>
+                            <td>Oct 10, 2023</td>
+                            <td><span class="status validado">VALIDADO</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <a href="#" class="link-ver-todos">VER TODOS OS LOGS</a>
+            </section>
+        </main>
+
+        <button class="fab-button"><i class='bx bx-plus'></i></button>
+
+    </div>
+</body>
+</html>
