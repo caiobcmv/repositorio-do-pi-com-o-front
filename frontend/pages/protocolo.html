@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senac - Protocolos de Atividade</title>
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="/styles/protocolo.css">
+    <link rel="stylesheet" href="/styles/protocolo.css">
 
-<script src="/services/script.js"></script>
+    <script src="/services/script.js"></script>
     <link rel="stylesheet" href="/styles/sidebar.css">
 </head>
+
 <body>
 
     <div class="layout-geral">
-        
-                <!-- Sidebar Unificada -->
+
+        <!-- Sidebar Unificada -->
         <aside class="sidebar-dark">
             <div class="logo-secao">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
                 <span class="logo-subtext">GESTÃO ACADÊMICA</span>
             </div>
 
             <nav class="menu-navegacao">
                 <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
-                <a href="cursos.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
                 <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
                 <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
                 <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
@@ -33,13 +35,16 @@
 
             <div class="sidebar-bottom-action">
                 <div class="perfil-sidebar">
-                    <img id="sidebar-avatar-global" src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
                     <div class="perfil-sidebar-info">
                         <strong id="sidebar-nome-global">Usuário</strong>
                         <small id="sidebar-role-global">Gestão</small>
                     </div>
                 </div>
-                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i class='bx bx-log-out'></i> Sair</a>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
             </div>
         </aside>
 
@@ -55,11 +60,11 @@
                         link.classList.remove('active');
                     }
                 });
-                
+
                 if (localStorage.getItem('nome')) {
                     const nomeEl = document.getElementById('sidebar-nome-global');
                     if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
-                    
+
                     const avatarEl = document.getElementById('sidebar-avatar-global');
                     if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
                 }
@@ -71,12 +76,12 @@
         </script>
 
         <main class="conteudo-principal">
-            
+
             <header class="cabecalho-topo">
                 <div class="abas-links">
 
                     <a href="certificado.html" class="aba">Certificados</a>
-                   
+
                 </div>
 
                 <div class="acoes-usuario">
@@ -94,9 +99,11 @@
                 <div class="textos-pagina">
                     <span class="etiqueta-laranja">GESTÃO ACADÊMICA</span>
                     <h1>Protocolos de Atividade</h1>
-                    <p>Central de curadoria para validação de horas complementares. Analise, revise e aprove as solicitações submetidas pelo corpo discente de forma organizada e eficiente seguindo os padrões Senac.</p>
+                    <p>Central de curadoria para validação de horas complementares. Analise, revise e aprove as
+                        solicitações submetidas pelo corpo discente de forma organizada e eficiente seguindo os padrões
+                        Senac.</p>
                 </div>
-                
+
                 <div class="metricas-rapidas">
                     <div class="metrica">
                         <h2>142</h2>
@@ -111,7 +118,7 @@
             </section>
 
             <div class="cartao-tabela-container">
-                
+
                 <div class="filtros-tabela">
                     <div class="grupo-filtro">
                         <label>FILTRAR POR CURSO</label>
@@ -213,11 +220,12 @@
             </div>
 
             <div class="grade-cards-rodape">
-                
+
                 <div class="card-info atencao">
                     <i class='bx bx-calendar-exclamation icon-card'></i>
                     <h3>Atenção Necessária</h3>
-                    <p>Existem 12 protocolos com mais de 15 dias sem movimentação. Recomenda-se a análise prioritária destes itens.</p>
+                    <p>Existem 12 protocolos com mais de 15 dias sem movimentação. Recomenda-se a análise prioritária
+                        destes itens.</p>
                     <a href="#" class="link-card">REVISAR ATRASADOS <i class='bx bx-right-arrow-alt'></i></a>
                 </div>
 
@@ -231,10 +239,13 @@
                 <div class="card-info guia">
                     <h3>Guia de Curadoria</h3>
                     <ul class="lista-guia">
-                        <li><i class='bx bx-check-circle'></i> Confira a carga horária máxima permitida por categoria.</li>
-                        <li><i class='bx bx-check-circle'></i> Valide a autenticidade dos certificados digitais anexados.</li>
+                        <li><i class='bx bx-check-circle'></i> Confira a carga horária máxima permitida por categoria.
+                        </li>
+                        <li><i class='bx bx-check-circle'></i> Valide a autenticidade dos certificados digitais
+                            anexados.</li>
                     </ul>
-                    <a href="#" class="link-card-branco">ACESSE O MANUAL DO AVALIADOR <i class='bx bx-link-external'></i></a>
+                    <a href="#" class="link-card-branco">ACESSE O MANUAL DO AVALIADOR <i
+                            class='bx bx-link-external'></i></a>
                 </div>
             </div>
 
@@ -245,4 +256,5 @@
         </main>
     </div>
 </body>
+
 </html>

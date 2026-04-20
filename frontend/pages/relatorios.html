@@ -11,63 +11,63 @@
     <script src="/services/apiHelper.js"></script>
 
     <script>
-    protegerPagina(['COORDINATOR', 'SUPER_ADMIN', 'COORDENADOR']);
+        protegerPagina(['COORDINATOR', 'SUPER_ADMIN', 'COORDENADOR']);
 
-    function formatarDataLocal(data) {
-        if (!data) return '—';
-        const d = new Date(data);
-        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).replace(' de ', ' ').toUpperCase();
-    }
+        function formatarDataLocal(data) {
+            if (!data) return '—';
+            const d = new Date(data);
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).replace(' de ', ' ').toUpperCase();
+        }
 
-    window.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const dados = await apiGet('/dashboard/relatorios');
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const dados = await apiGet('/dashboard/relatorios');
 
-            // 1. Total de horas (Card 1)
-            const elHoras = document.querySelector('.kpi-card:nth-child(1) h2');
-            if (elHoras) elHoras.textContent = Number(dados.total_horas).toLocaleString('pt-BR');
+                // 1. Total de horas (Card 1)
+                const elHoras = document.querySelector('.kpi-card:nth-child(1) h2');
+                if (elHoras) elHoras.textContent = Number(dados.total_horas).toLocaleString('pt-BR');
 
-            // 2. Eficiência (Card 2)
-            const elEficiencia = document.querySelector('.kpi-card:nth-child(2) h2');
-            if (elEficiencia) elEficiencia.innerHTML = `${dados.eficiencia.eficiencia_percentual} <small>%</small>`;
+                // 2. Eficiência (Card 2)
+                const elEficiencia = document.querySelector('.kpi-card:nth-child(2) h2');
+                if (elEficiencia) elEficiencia.innerHTML = `${dados.eficiencia.eficiencia_percentual} <small>%</small>`;
 
-            // 3. Pendentes (Card 3)
-            const elPendentes = document.querySelector('.kpi-card:nth-child(3) h2');
-            if (elPendentes) {
-                 const valor = dados.eficiencia.total - dados.eficiencia.aprovadas;
-                 elPendentes.textContent = valor;
-            }
+                // 3. Pendentes (Card 3)
+                const elPendentes = document.querySelector('.kpi-card:nth-child(3) h2');
+                if (elPendentes) {
+                    const valor = dados.eficiencia.total - dados.eficiencia.aprovadas;
+                    elPendentes.textContent = valor;
+                }
 
-            // 4. GRÁFICO: Horas mensais
-            const chartContent = document.querySelector('.chart-content');
-            const chartLabels = document.querySelector('.chart-labels');
-            if (chartContent && chartLabels && dados.horas_mensais && dados.horas_mensais.length > 0) {
-                const maxHoras = Math.max(...dados.horas_mensais.map(m => m.horas));
-                
-                // Limpa as colunas antigas mantendo o SVG
-                const bars = chartContent.querySelectorAll('.bar-group');
-                bars.forEach(b => b.remove());
+                // 4. GRÁFICO: Horas mensais
+                const chartContent = document.querySelector('.chart-content');
+                const chartLabels = document.querySelector('.chart-labels');
+                if (chartContent && chartLabels && dados.horas_mensais && dados.horas_mensais.length > 0) {
+                    const maxHoras = Math.max(...dados.horas_mensais.map(m => m.horas));
 
-                dados.horas_mensais.forEach(m => {
-                    const group = document.createElement('div');
-                    group.className = 'bar-group';
-                    const div = document.createElement('div');
-                    div.className = 'bar bg-cinza-claro';
-                    div.style.height = maxHoras > 0 ? (m.horas / maxHoras * 100) + '%' : '0%';
-                    group.appendChild(div);
-                    chartContent.insertBefore(group, chartContent.querySelector('svg'));
-                });
+                    // Limpa as colunas antigas mantendo o SVG
+                    const bars = chartContent.querySelectorAll('.bar-group');
+                    bars.forEach(b => b.remove());
 
-                chartLabels.innerHTML = dados.horas_mensais.map(m => `<span>${m.mes}</span>`).join('');
-            }
+                    dados.horas_mensais.forEach(m => {
+                        const group = document.createElement('div');
+                        group.className = 'bar-group';
+                        const div = document.createElement('div');
+                        div.className = 'bar bg-cinza-claro';
+                        div.style.height = maxHoras > 0 ? (m.horas / maxHoras * 100) + '%' : '0%';
+                        group.appendChild(div);
+                        chartContent.insertBefore(group, chartContent.querySelector('svg'));
+                    });
 
-            // 5. GRÁFICO: Eficiência por curso
-            const listaProgresso = document.querySelector('.lista-progresso');
-            if (listaProgresso && dados.eficiencia_por_curso && dados.eficiencia_por_curso.length > 0) {
-                listaProgresso.innerHTML = dados.eficiencia_por_curso.map((c, index) => {
-                    // Cursos com baixa eficiência ficam com a barra laranja, senão azul
-                    const bgClass = c.eficiencia < 70 ? 'bg-laranja' : 'bg-azul-main';
-                    return `
+                    chartLabels.innerHTML = dados.horas_mensais.map(m => `<span>${m.mes}</span>`).join('');
+                }
+
+                // 5. GRÁFICO: Eficiência por curso
+                const listaProgresso = document.querySelector('.lista-progresso');
+                if (listaProgresso && dados.eficiencia_por_curso && dados.eficiencia_por_curso.length > 0) {
+                    listaProgresso.innerHTML = dados.eficiencia_por_curso.map((c, index) => {
+                        // Cursos com baixa eficiência ficam com a barra laranja, senão azul
+                        const bgClass = c.eficiencia < 70 ? 'bg-laranja' : 'bg-azul-main';
+                        return `
                     <div class="item-progresso">
                         <div class="info-progresso"><span>${c.nome_curso.toUpperCase()}</span> <strong>${c.eficiencia}%</strong></div>
                         <div class="barra-fundo">
@@ -75,12 +75,12 @@
                         </div>
                     </div>
                 `}).join('');
-            }
+                }
 
-            // 6. TABELA: Log de atividades
-            const tbody = document.querySelector('.tabela-logs tbody');
-            if (tbody && dados.log_atividades && dados.log_atividades.length > 0) {
-                tbody.innerHTML = dados.log_atividades.map(a => `
+                // 6. TABELA: Log de atividades
+                const tbody = document.querySelector('.tabela-logs tbody');
+                if (tbody && dados.log_atividades && dados.log_atividades.length > 0) {
+                    tbody.innerHTML = dados.log_atividades.map(a => `
                     <tr>
                         <td>
                             <div class="td-curso"><i class='bx bx-category icon-curso'></i> ${a.category_name || '—'}</div>
@@ -93,12 +93,12 @@
                         </span></td>
                     </tr>
                 `).join('');
-            }
+                }
 
-        } catch (err) {
-            console.error('Erro ao carregar relatórios:', err);
-        }
-    });
+            } catch (err) {
+                console.error('Erro ao carregar relatórios:', err);
+            }
+        });
     </script>
     <link rel="stylesheet" href="/styles/sidebar.css">
 </head>
@@ -106,10 +106,11 @@
 <body>
     <div class="layout-geral">
         <!-- Sidebar -->
-                <!-- Sidebar Unificada -->
+        <!-- Sidebar Unificada -->
         <aside class="sidebar-dark">
             <div class="logo-secao">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
                 <span class="logo-subtext">GESTÃO ACADÊMICA</span>
             </div>
 
@@ -117,7 +118,6 @@
                 <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
                 <a href="cursos.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
                 <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
-                <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
                 <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
                 <a href="relatorios.html" class="link-menu"><i class='bx bx-bar-chart-alt-2'></i> Relatórios</a>
                 <a href="configuracao.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
@@ -125,13 +125,16 @@
 
             <div class="sidebar-bottom-action">
                 <div class="perfil-sidebar">
-                    <img id="sidebar-avatar-global" src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
                     <div class="perfil-sidebar-info">
                         <strong id="sidebar-nome-global">Usuário</strong>
                         <small id="sidebar-role-global">Gestão</small>
                     </div>
                 </div>
-                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i class='bx bx-log-out'></i> Sair</a>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
             </div>
         </aside>
 
@@ -147,11 +150,11 @@
                         link.classList.remove('active');
                     }
                 });
-                
+
                 if (localStorage.getItem('nome')) {
                     const nomeEl = document.getElementById('sidebar-nome-global');
                     if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
-                    
+
                     const avatarEl = document.getElementById('sidebar-avatar-global');
                     if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
                 }

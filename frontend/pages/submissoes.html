@@ -131,16 +131,16 @@
     <div class="layout-geral">
 
         <!-- Sidebar -->
-                <!-- Sidebar Unificada -->
+        <!-- Sidebar Unificada -->
         <aside class="sidebar-dark">
             <div class="logo-secao">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
                 <span class="logo-subtext">GESTÃO ACADÊMICA</span>
             </div>
 
             <nav class="menu-navegacao">
                 <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
-                <a href="cursos.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
                 <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
                 <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
                 <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
@@ -150,13 +150,16 @@
 
             <div class="sidebar-bottom-action">
                 <div class="perfil-sidebar">
-                    <img id="sidebar-avatar-global" src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
                     <div class="perfil-sidebar-info">
                         <strong id="sidebar-nome-global">Usuário</strong>
                         <small id="sidebar-role-global">Gestão</small>
                     </div>
                 </div>
-                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i class='bx bx-log-out'></i> Sair</a>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
             </div>
         </aside>
 
@@ -172,11 +175,11 @@
                         link.classList.remove('active');
                     }
                 });
-                
+
                 if (localStorage.getItem('nome')) {
                     const nomeEl = document.getElementById('sidebar-nome-global');
                     if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
-                    
+
                     const avatarEl = document.getElementById('sidebar-avatar-global');
                     if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
                 }

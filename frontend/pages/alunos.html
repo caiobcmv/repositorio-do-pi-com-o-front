@@ -8,6 +8,7 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="/styles/seu-estilo.css">
     <link rel="stylesheet" href="/styles/alunos.css">
+    <script src="/services/apiHelper.js"></script>
     <script src="/services/script.js"></script>
     <link rel="stylesheet" href="/styles/sidebar.css">
 </head>
@@ -15,134 +16,166 @@
 <body>
     <script>
         /**
-      * Bloqueia o acesso à página se o usuário não for COORDENADOR ou SUPER_ADMIN.
-      * Essa função vem do seu arquivo script.js e verifica o token no localStorage.
-      */
-        protegerPagina(['COORDENADOR', 'SUPER_ADMIN']);
+         * Bloqueia o acesso à página se o usuário não for COORDENADOR ou SUPER_ADMIN.
+         */
+        requireRole('COORDENADOR', 'SUPER_ADMIN');
 
-        // Aguarda todo o HTML da página carregar antes de executar o script
+        // Função para gerar as cores das tags de curso automaticamente
+        function getCorCurso(cursoNome) {
+            const cores = [
+                { bg: 'rgba(139,92,246,.1)', color: '#7c3aed' }, // Roxo
+                { bg: 'rgba(37,99,235,.1)', color: '#2563eb' },  // Azul
+                { bg: 'rgba(245,158,11,.1)', color: '#d4800a' }, // Laranja
+                { bg: 'rgba(16,185,129,.1)', color: '#10b981' }, // Verde
+                { bg: 'rgba(100,116,139,.1)', color: '#64748b' } // Cinza
+            ];
+            let sum = 0;
+            if (cursoNome) {
+                for (let i = 0; i < cursoNome.length; i++) sum += cursoNome.charCodeAt(i);
+            }
+            return cores[sum % cores.length];
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
 
-            // Pega o tipo de perfil (ALUNO, COORDENADOR, etc) que foi salvo no login
             const perfil = localStorage.getItem('perfil');
 
-            /**
-             * Função principal para buscar a lista de alunos do servidor
-             */
-            const fetchAlunos = () => {
-
-                // 1. Busca a lista de cursos para preencher o campo de "Filtro" (Select) no topo da página
-                apiGet('/admin/cursos').then(cursos => {
-                    const select = document.querySelector('.select-filtro-grande');
-
-                    // Se o select existir e a API retornar uma lista válida
-                    if (select && cursos && Array.isArray(cursos)) {
-                        cursos.forEach(c => {
-                            const opt = document.createElement('option');
-                            opt.textContent = c.nome_curso || c.nome; // Usa o nome do curso vindo do banco
-                            select.appendChild(opt); // Adiciona a opção no menu de filtro
-                        });
-                    }
-                }).catch(() => { }); // Ignora erros silenciosamente se a busca de cursos falhar
-
-                // 2. Lógica de busca de alunos baseada no Perfil
-                if (perfil === 'COORDENADOR') {
-                    // Se for COORDENADOR, primeiro busca os dados do próprio coordenador para saber o seu curso_id
-                    apiGet('/aluno/meus-dados').then(me => {
-                        if (me && me.aluno && me.aluno.curso_id) {
-                            // Com o ID do curso em mãos, busca apenas os alunos daquele curso específico
-                            apiGet(`/coordenador/alunos/${me.aluno.curso_id}`).then(alunos => {
-                                if (alunos && Array.isArray(alunos)) renderAlunos(alunos);
-                            }).catch(() => { });
-                        }
-                    }).catch(() => { });
-                } else {
-                    // Se for SUPER_ADMIN, ele pode ver tudo. 
-                    // Aqui ele busca os alunos do primeiro curso da lista como padrão inicial
-                    apiGet('/admin/cursos').then(cursos => {
-                        if (cursos && Array.isArray(cursos) && cursos.length > 0) {
-                            apiGet(`/coordenador/alunos/${cursos[0].id}`).then(alunos => {
-                                if (alunos && Array.isArray(alunos)) renderAlunos(alunos);
-                            }).catch(() => {
-                                renderAlunos([]); // Se der erro, limpa a tabela (mostra vazio)
-                            });
-                        }
-                    }).catch(() => { });
-                }
-            };
-
-            /**
-             * Função responsável por desenhar as linhas (tr) dentro da tabela HTML
-             */
+            // --- 1. FUNÇÃO PARA DESENHAR A TABELA ---
             function renderAlunos(alunos) {
                 const tbody = document.querySelector('.tabela-alunos tbody');
                 if (!tbody) return;
 
-                tbody.innerHTML = ''; // Limpa a tabela antes de começar a preencher
+                tbody.innerHTML = '';
 
-                // Atualiza o "KPI" (o quadradinho de resumo) com a quantidade total de alunos encontrados
+                if (!alunos || alunos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">Nenhum aluno encontrado no banco de dados.</td></tr>';
+
+                    // Zera os contadores
+                    const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
+                    if (totalEl) totalEl.textContent = '0';
+                    return;
+                }
+
+                // Atualiza KPI Total de Alunos
                 const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
                 if (totalEl) totalEl.textContent = alunos.length.toLocaleString('pt-BR');
 
-                // Percorre os alunos (limitando aos 20 primeiros para não travar o navegador)
                 alunos.slice(0, 20).forEach(a => {
-                    // Pega as iniciais do nome (ex: "João Silva" -> "JS") para o avatar
-                    const initials = getIniciais(a.nome);
+                    // Mapeamento seguro (ajuste os nomes conforme vem do seu banco)
+                    const nome = a.nome || a.full_name || 'Sem Nome';
+                    const email = a.email || '—';
+                    const ra = a.ra || a.matricula || a.id || '—';
+                    const semestre = a.semestre || a.periodo || '1';
+                    const statusLabel = a.status ? a.status.toUpperCase() : 'ATIVO';
 
-                    // Define a cor do círculo do avatar baseada no nome (para ser sempre a mesma cor para o mesmo aluno)
-                    const colorMap = { 'bg-azul': 'azul-escuro-ava', 'bg-laranja': 'laranja-ava', 'bg-verde': 'verde-ava', 'bg-roxo': 'roxo-ava', 'bg-cinza': 'cinza-ava' };
-                    const color = colorMap[colorAvatar(a.nome)] || 'cinza-ava';
+                    // Trata o curso (pode vir como string ou array igual nos coordenadores)
+                    let curso = a.curso || a.course_name || a.course_names || a.curso_nome || 'Não vinculado';
+                    if (Array.isArray(curso)) {
+                        curso = curso.length > 0 ? curso.join(', ') : 'Não vinculado';
+                    }
 
-                    // Define a classe CSS de acordo com o status (Verde para Ativo, Amarelo para Trancado, etc)
-                    const statusClass = a.status === 'ATIVO' ? 'status-ativo' :
-                        a.status === 'TRANCADO' ? 'status-trancado' : 'status-pendente-bad';
-                    const statusLabel = a.status || 'ATIVO';
+                    const initials = getInitials(nome);
+                    const colorClass = initialsColor(nome); // bg-azul, bg-laranja, etc.
+                    const corCurso = getCorCurso(curso);
 
-                    // Trata as informações do curso
-                    const cursoCor = a.curso_cor || 'rgba(37,99,235,.1)';
+                    // Estilo de Status
+                    let statusClass = 'status-ativo';
+                    if (statusLabel === 'TRANCADO' || statusLabel === 'INATIVO') statusClass = 'status-trancado';
+                    if (statusLabel === 'PENDENTE') statusClass = 'status-pendente-bad';
 
-                    // Cria a linha da tabela (TR) com os dados do aluno
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                <td>
-                    <div class="td-aluno-row">
-                        <div class="avatar-circle ${color}">${initials}</div>
-                        <div>
-                            <strong>${a.nome}</strong>
-                            <span class="email-aluno">${a.email || '—'}</span>
-                        </div>
-                    </div>
-                </td>
-                <td class="td-ra">${a.ra || a.id || '—'}</td>
-                <td><span class="tag-curso-aluno" style="background:${cursoCor};">${a.curso_nome || '—'}</span></td>
-                <td class="td-semestre">${a.semestre ? a.semestre + 'º' : '—'}</td>
-                <td><span class="status-badge-aluno ${statusClass}"><i class='bx bx-circle-fill' style="font-size:7px"></i> ${statusLabel}</span></td>`;
+                        <td>
+                            <div class="td-aluno-row">
+                                <div class="avatar-circle ${colorClass}">${initials}</div>
+                                <div>
+                                    <strong>${nome}</strong>
+                                    <span class="email-aluno">${email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="td-ra">${ra}</td>
+                        <td>
+                            <span class="tag-curso-aluno" style="background: ${corCurso.bg}; color: ${corCurso.color};">
+                                ${curso}
+                            </span>
+                        </td>
+                        <td class="td-semestre">${semestre}º</td>
+                        <td>
+                            <span class="status-badge-aluno ${statusClass}">
+                                <i class='bx bx-circle-fill' style="font-size:7px"></i> ${statusLabel}
+                            </span>
+                        </td>`;
 
-                    tbody.appendChild(tr); // Insere a linha pronta na tabela
+                    tbody.appendChild(tr);
                 });
 
-                // Atualiza o texto de rodapé informando quantos registros estão na tela
-                const infoListagem = document.querySelector('.info-listagem');
-                if (infoListagem) infoListagem.textContent = `Exibindo ${alunos.length} alunos`;
+                const infoListagem = document.querySelector('.info-listagem span');
+                if (infoListagem) infoListagem.textContent = `Exibindo 1-${Math.min(alunos.length, 20)} de ${alunos.length.toLocaleString()} alunos`;
             }
 
-            // Chama a função inicial para carregar os dados assim que abrir a página
+            // --- 2. FUNÇÃO CENTRAL DE BUSCA ---
+            const fetchAlunos = () => {
+                // Busca Cursos para o Filtro
+                apiGet('/admin/cursos').then(cursos => {
+                    const select = document.querySelector('.select-filtro-grande');
+                    if (select && cursos && Array.isArray(cursos)) {
+                        cursos.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.textContent = c.nome_curso || c.nome || c.course_name;
+                            select.appendChild(opt);
+                        });
+                    }
+                }).catch(err => console.error("Filtro de cursos falhou silenciosamente", err));
+
+                // Lógica de busca de alunos
+                if (perfil === 'COORDENADOR') {
+                    apiGet('/aluno/meus-dados').then(me => {
+                        if (me && me.aluno && me.aluno.curso_id) {
+                            apiGet(`/coordenador/alunos/${me.aluno.curso_id}`).then(alunos => {
+                                let lista = Array.isArray(alunos) ? alunos : (alunos.data || alunos.alunos || []);
+                                renderAlunos(lista);
+                            }).catch(() => renderAlunos([]));
+                        } else {
+                            renderAlunos([]);
+                        }
+                    }).catch(() => renderAlunos([]));
+                } else {
+                    // Rota para SUPER_ADMIN (busca todos)
+                    apiGet('/admin/alunos').then(resposta => {
+                        console.log("Chegou da API de Alunos:", resposta);
+                        let lista = [];
+                        if (Array.isArray(resposta)) {
+                            lista = resposta;
+                        } else if (resposta && Array.isArray(resposta.data)) {
+                            lista = resposta.data;
+                        } else if (resposta && Array.isArray(resposta.alunos)) {
+                            lista = resposta.alunos;
+                        }
+                        renderAlunos(lista);
+                    }).catch(err => {
+                        console.error("A rota /admin/alunos falhou no backend", err);
+                        renderAlunos([]);
+                    });
+                }
+            };
+
+            // Aciona a busca
             fetchAlunos();
         });
     </script>
 
     <div class="layout-geral">
 
-                <!-- Sidebar Unificada -->
         <aside class="sidebar-dark">
             <div class="logo-secao">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
                 <span class="logo-subtext">GESTÃO ACADÊMICA</span>
             </div>
 
             <nav class="menu-navegacao">
                 <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
-                <a href="cursos.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
                 <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
                 <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
                 <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
@@ -152,33 +185,25 @@
 
             <div class="sidebar-bottom-action">
                 <div class="perfil-sidebar">
-                    <img id="sidebar-avatar-global" src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
                     <div class="perfil-sidebar-info">
                         <strong id="sidebar-nome-global">Usuário</strong>
                         <small id="sidebar-role-global">Gestão</small>
                     </div>
                 </div>
-                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i class='bx bx-log-out'></i> Sair</a>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
             </div>
         </aside>
 
-        <!-- Script para ativar a aba atual e carregar dados do usuário -->
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                const currentPage = window.location.pathname.split('/').pop() || 'dashboardadm.html';
-                const links = document.querySelectorAll('.sidebar-dark .menu-navegacao .link-menu');
-                links.forEach(link => {
-                    if (link.getAttribute('href') === currentPage) {
-                        link.classList.add('active');
-                    } else {
-                        link.classList.remove('active');
-                    }
-                });
-                
                 if (localStorage.getItem('nome')) {
                     const nomeEl = document.getElementById('sidebar-nome-global');
                     if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
-                    
+
                     const avatarEl = document.getElementById('sidebar-avatar-global');
                     if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
                 }
@@ -203,8 +228,8 @@
                 <div class="acoes-usuario">
                     <i class='bx bx-bell icon-header'></i>
                     <div class="perfil-info">
-                        <strong>Dr. Ricardo Silva</strong>
-                        <small>Diretor Acadêmico</small>
+                        <strong>Admin Principal</strong>
+                        <small>Super Admin</small>
                     </div>
                     <div class="foto-perfil"></div>
                 </div>
@@ -213,11 +238,11 @@
             <section class="cabecalho-pagina">
                 <div>
                     <div class="breadcrumb">
-                        <span>GEST&Atilde;O ACAD&Ecirc;MICA</span>
+                        <span>GESTÃO ACADÊMICA</span>
                         <i class='bx bx-chevron-right'></i>
                         <span>ALUNOS</span>
                         <i class='bx bx-chevron-right'></i>
-                        <span class="breadcrumb-ativo">VIS&Atilde;O GERAL</span>
+                        <span class="breadcrumb-ativo">VISÃO GERAL</span>
                     </div>
                     <h1>Gestão de Alunos</h1>
                 </div>
@@ -231,7 +256,7 @@
                 <div class="kpi-card-kpi">
                     <span class="kpi-kpi-titulo">TOTAL DE ALUNOS</span>
                     <div class="kpi-kpi-valor-row">
-                        <h2>1,284</h2>
+                        <h2>0</h2>
                         <span class="badge-kpi badge-verde-subir">
                             <i class='bx bx-trending-up'></i> +9% este semestre
                         </span>
@@ -280,7 +305,7 @@
                 </div>
 
                 <div class="info-listagem">
-                    <span>Exibindo 1-6 de 1,284 alunos</span>
+                    <span>Exibindo 0 alunos</span>
                 </div>
 
                 <table class="tabela-alunos">
@@ -295,96 +320,9 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>
-                                <div class="td-aluno-row">
-                                    <div class="avatar-circle azul-escuro-ava">A.A</div>
-                                    <div>
-                                        <strong>Ana Beatriz Arruda</strong>
-                                        <span class="email-aluno">ana.arruda@senac.br</span>
-                                    </div>
-                                </div>
+                            <td colspan="5" style="text-align: center; color: var(--texto-light); padding: 20px;">
+                                Carregando alunos...
                             </td>
-                            <td class="td-ra">20230112321</td>
-                            <td><span class="tag-curso-aluno"
-                                    style="background: rgba(139,92,246,.1); color: #7c3aed;">Design Gráfico</span></td>
-                            <td class="td-semestre">6º</td>
-                            <td><span class="status-badge-aluno status-ativo"><i class='bx bx-circle-fill'
-                                        style="font-size:7px"></i> ATIVO</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="td-aluno-row">
-                                    <div class="avatar-circle laranja-ava">CE</div>
-                                    <div>
-                                        <strong>Carlos Eduardo Ramos</strong>
-                                        <span class="email-aluno">carlos.ramos@senac.br</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="td-ra">20230267743</td>
-                            <td><span class="tag-curso-aluno"
-                                    style="background: rgba(37,99,235,.1); color: #2563eb;">Análise e Des.
-                                    Sistemas</span></td>
-                            <td class="td-semestre">4º</td>
-                            <td><span class="status-badge-aluno status-ativo"><i class='bx bx-circle-fill'
-                                        style="font-size:7px"></i> ATIVO</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="td-aluno-row">
-                                    <div class="avatar-circle verde-ava">GS</div>
-                                    <div>
-                                        <strong>Gabriel Santos</strong>
-                                        <span class="email-aluno">gabriel.santos@senac.br</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="td-ra">20230342961</td>
-                            <td><span class="tag-curso-aluno"
-                                    style="background: rgba(245,158,11,.1); color: #d4800a;">Gastronomia</span></td>
-                            <td class="td-semestre">2º</td>
-                            <td>
-                                <div>
-                                    <span class="status-badge-aluno status-pendente-bad"><i class='bx bx-circle-fill'
-                                            style="font-size:7px"></i> PENDENTE</span>
-                                    <span class="sub-status">TRANCADO</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="td-aluno-row">
-                                    <div class="avatar-circle roxo-ava">LM</div>
-                                    <div>
-                                        <strong>Lívia Mendes</strong>
-                                        <span class="email-aluno">livia.mendes@senac.br</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="td-ra">20230451598</td>
-                            <td><span class="tag-curso-aluno"
-                                    style="background: rgba(16,185,129,.1); color: #10b981;">Design de Interiores</span>
-                            </td>
-                            <td class="td-semestre">8º</td>
-                            <td><span class="status-badge-aluno status-ativo"><i class='bx bx-circle-fill'
-                                        style="font-size:7px"></i> ATIVO</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="td-aluno-row">
-                                    <div class="avatar-circle cinza-ava">RM</div>
-                                    <div>
-                                        <strong>Rafael Monteiro</strong>
-                                        <span class="email-aluno">rafael.monteiro@senac.br</span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="td-ra">20230565419</td>
-                            <td><span class="tag-curso-aluno"
-                                    style="background: rgba(100,116,139,.1); color: #64748b;">Têxtil</span></td>
-                            <td class="td-semestre">2º</td>
-                            <td><span class="status-badge-aluno status-trancado"><i class='bx bx-circle-fill'
-                                        style="font-size:7px"></i> TRANCADO</span></td>
                         </tr>
                     </tbody>
                 </table>
