@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Gestão de Cursos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+    <link rel="stylesheet" href="/styles/cursosuperadm.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+</head>
+<body>
+    <script>
+        protegerPagina(['SUPER_ADMIN']);
+    </script>
+
+    <div class="layout-geral">
+        
+        <!-- Sidebar -->
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
+                <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout();"><i class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="conteudo-principal">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="top-header-left" style="gap: 40px;">
+                    <nav class="top-nav-links" style="display: flex; gap: 30px; height: 100%; align-items: center;">
+                        <a href="cursosuperadm.html" style="text-decoration: none; color: var(--azul-senac); font-weight: 600; font-size: 14px; border-bottom: 2px solid var(--laranja-senac); padding: 25px 0;">Gestão</a>
+                        <a href="cursoadm.html" style="text-decoration: none; color: var(--texto-light); font-weight: 600; font-size: 14px; padding: 25px 0;">Análise</a>
+                    </nav>
+                    <div class="search-wrap">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Buscar por curso ou ID...">
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <i class='bx bx-bell icon-header'></i>
+                    <i class='bx bx-help-circle icon-header'></i>
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <strong>Admin Senac</strong>
+                            <small>SUPER ADMIN</small>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=A+S&background=f6821f&color=fff" alt="User">
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-container">
+                
+                <!-- Title & Action -->
+                <div class="header-action-row">
+                    <div class="page-title">
+                        <div class="breadcrumb">GESTÃO ACADEMICA</div>
+                        <h1>3a. Gestão de Cursos <span>(Super Adm)</span></h1>
+                    </div>
+                    <button class="btn-primary">
+                        <i class='bx bx-plus-circle'></i> Criar Novo Curso
+                    </button>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpis-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-badge">+4 ESTE MÊS</div>
+                        <div class="kpi-icon kpi-icon-blue"><i class='bx bx-book-bookmark'></i></div>
+                        <div class="kpi-title">Total de Cursos</div>
+                        <div class="kpi-value">124</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon kpi-icon-orange"><i class='bx bx-user-voice'></i></div>
+                        <div class="kpi-title">Coordenadores Ativos</div>
+                        <div class="kpi-value">48</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon kpi-icon-orange"><i class='bx bx-clipboard'></i></div>
+                        <div class="kpi-title">Aguardando Revisão</div>
+                        <div class="kpi-value">12</div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon kpi-icon-blue"><i class='bx bx-group'></i></div>
+                        <div class="kpi-title">Alunos Matriculados</div>
+                        <div class="kpi-value">3,842</div>
+                    </div>
+                </div>
+
+                <!-- Table Area -->
+                <div class="table-container">
+                    
+                    <div class="table-header">
+                        <h2>Listagem de Cursos</h2>
+                        <div class="table-actions">
+                            <button class="btn-outline"><i class='bx bx-filter'></i> Filtrar</button>
+                            <button class="btn-outline"><i class='bx bx-download'></i> Exportar CSV</button>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NOME DO CURSO</th>
+                                <th>COORDENADOR VINCULADO</th>
+                                <th>DATA DE CRIAÇÃO</th>
+                                <th>STATUS</th>
+                                <th>AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Item 1 -->
+                            <tr>
+                                <td>
+                                    <div class="td-curso">
+                                        <div class="curso-sigla">ADS</div>
+                                        <div class="curso-info">
+                                            <strong>Análise e Desenvolvimento de Sistemas</strong>
+                                            <small>Bacharelado • 8 semestres</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-coordenador">
+                                        <div class="coord-avatar">M</div>
+                                        <span>Dr. Marcos Oliveira</span>
+                                    </div>
+                                </td>
+                                <td class="td-data">12 Jan,<br>2023</td>
+                                <td><span class="status-pill status-ativo">Ativo</span></td>
+                                <td>
+                                    <div class="td-acoes">
+                                        <i class='bx bx-pencil'></i>
+                                        <i class='bx bx-show'></i>
+                                        <i class='bx bx-download'></i>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Item 2 -->
+                            <tr>
+                                <td>
+                                    <div class="td-curso">
+                                        <div class="curso-sigla sigla-amarela">ADM</div>
+                                        <div class="curso-info">
+                                            <strong>Gestão Comercial</strong>
+                                            <small>Tecnólogo • 4 semestres</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-coordenador">
+                                        <div class="coord-avatar">H</div>
+                                        <span>Profa. Helena Souza</span>
+                                    </div>
+                                </td>
+                                <td class="td-data">05 Mar,<br>2023</td>
+                                <td><span class="status-pill status-ativo">Ativo</span></td>
+                                <td>
+                                    <div class="td-acoes">
+                                        <i class='bx bx-pencil'></i>
+                                        <i class='bx bx-show'></i>
+                                        <i class='bx bx-download'></i>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Item 3 -->
+                            <tr>
+                                <td>
+                                    <div class="td-curso">
+                                        <div class="curso-sigla">DSG</div>
+                                        <div class="curso-info">
+                                            <strong>Design de Experiência (UX)</strong>
+                                            <small>Especialização • 2 semestres</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-coordenador pendente">
+                                        <div class="coord-avatar" style="background: #f8fafc; color: #cbd5e1; border: 1px dashed #cbd5e1;">NA</div>
+                                        <span>Pendente vinculação</span>
+                                    </div>
+                                </td>
+                                <td class="td-data">28 Out,<br>2023</td>
+                                <td><span class="status-pill status-rascunho">Rascunho</span></td>
+                                <td>
+                                    <div class="td-acoes">
+                                        <i class='bx bx-pencil'></i>
+                                        <i class='bx bx-show'></i>
+                                        <i class='bx bx-download'></i>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Item 4 -->
+                            <tr>
+                                <td>
+                                    <div class="td-curso">
+                                        <div class="curso-sigla" style="background:#f1f5f9;color:#64748b;">ENG</div>
+                                        <div class="curso-info">
+                                            <strong>Engenharia de Software</strong>
+                                            <small>Bacharelado • 10 semestres</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-coordenador">
+                                        <div class="coord-avatar">R</div>
+                                        <span>Dr. Ricardo Santos</span>
+                                    </div>
+                                </td>
+                                <td class="td-data">15 Nov,<br>2022</td>
+                                <td><span class="status-pill status-inativo">Inativo</span></td>
+                                <td>
+                                    <div class="td-acoes">
+                                        <i class='bx bx-pencil'></i>
+                                        <i class='bx bx-show'></i>
+                                        <i class='bx bx-download'></i>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination-row">
+                        <div class="pagination-info">
+                            Mostrando <strong>1-4</strong> de <strong>124</strong> cursos
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn arrow"><i class='bx bx-chevron-left'></i></button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <span class="page-btn arrow">...</span>
+                            <button class="page-btn">31</button>
+                            <button class="page-btn arrow"><i class='bx bx-chevron-right'></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Modules -->
+                <div class="bottom-modules">
+                    
+                    <!-- Relatórios Rápidos -->
+                    <div class="module-relatorios">
+                        <i class='bx bx-bar-chart-alt-2 bg-grafico'></i>
+                        <h3>Relatórios Rápidos</h3>
+                        <p>Acesse métricas avançadas de desempenho por curso e taxa de evasão semestral.</p>
+                        <button class="btn-white">GERAR AGORA</button>
+                    </div>
+
+                    <!-- Suporte Administrativo -->
+                    <div class="module-suporte">
+                        <h3>Suporte Administrativo</h3>
+                        <p>Precisa de ajuda com a estrutura curricular ou migração de dados?</p>
+                        <div class="suporte-action">
+                            <div class="avatar-group">
+                                <div class="av"></div>
+                                <div class="av"></div>
+                                <div class="av"></div>
+                            </div>
+                            <span class="link-ti">Falar com a TI</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'cursosuperadm.html';
+            const links = document.querySelectorAll('.sidebar-dark .menu-navegacao .link-menu');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

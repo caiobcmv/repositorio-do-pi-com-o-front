@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Configurações do Sistema</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+    <link rel="stylesheet" href="/styles/configadm.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+</head>
+
+<body>
+    <script>
+        protegerPagina(['SUPER_ADMIN']);
+    </script>
+
+    <div class="layout-geral">
+
+        <!-- Sidebar Unificada -->
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
+                <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div class="sidebar-bottom-action">
+                <div class="perfil-sidebar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=S+A&background=0056b3&color=fff" alt="Avatar">
+                    <div class="perfil-sidebar-info">
+                        <strong id="sidebar-nome-global">SUPER ADM</strong>
+                        <small id="sidebar-role-global">Gestão</small>
+                    </div>
+                </div>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="conteudo-principal">
+
+            <!-- Top Header -->
+            <header class="top-header">
+                <nav class="top-nav-links">
+                    <a href="configadm.html" class="active">Globais & Permissões</a>
+                    <a href="configadm_sistema.html">Sistema & Segurança</a>
+                </nav>
+
+                <div class="header-right">
+                    <div class="search-wrap">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Buscar...">
+                    </div>
+                    <i class='bx bx-bell icon-header'></i>
+                    <i class='bx bx-cog icon-header'></i>
+                    <button class="btn-primary">+ Novo Protocolo</button>
+                </div>
+            </header>
+
+            <div class="page-container">
+
+                <!-- Title -->
+                <div class="breadcrumb">ADMINISTRAÇÃO DO SISTEMA</div>
+                <div class="page-title">
+                    <h1>Painel de Configurações Globais & Permissões</h1>
+                </div>
+
+                <!-- Grid Layout -->
+                <div class="grid-container">
+
+                    <!-- Left Column -->
+                    <div class="col-left">
+
+                        <!-- Novo Tipo de Atividade Form -->
+                        <div class="card-left">
+                            <div class="bg-shape-light"></div>
+                            <div class="card-left-title">
+                                <i class='bx bx-category'></i>
+                                Novo Tipo de Atividade
+                            </div>
+
+                            <div class="form-group">
+                                <label>NOME DA ATIVIDADE</label>
+                                <input type="text" placeholder="ex: Monitoria Voluntária">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>PESO DE HORAS</label>
+                                    <input type="text" placeholder="1.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>LIMITE MAX</label>
+                                    <input type="text" placeholder="40h">
+                                </div>
+                            </div>
+
+                            <button class="btn-block">CADASTRAR ATIVIDADE</button>
+                        </div>
+
+                        <!-- Limites por Curso -->
+                        <div class="card-left">
+                            <div class="card-left-title" style="margin-bottom: 20px;">
+                                <i class='bx bx-timer'></i>
+                                Limites por Curso
+                            </div>
+
+                            <div class="limite-item">
+                                <div class="limite-info">
+                                    <span>ADS</span>
+                                    <span>100H TOTAL</span>
+                                </div>
+                                <div class="limite-bar-bg">
+                                    <div class="limite-bar-fill" style="width: 70%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="limite-item">
+                                <div class="limite-info">
+                                    <span>Moda</span>
+                                    <span>100H TOTAL</span>
+                                </div>
+                                <div class="limite-bar-bg">
+                                    <div class="limite-bar-fill" style="width: 100%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="limite-item">
+                                <div class="limite-info">
+                                    <span>Administração</span>
+                                    <span>100H TOTAL</span>
+                                </div>
+                                <div class="limite-bar-bg">
+                                    <div class="limite-bar-fill" style="width: 40%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-right">
+
+                        <!-- Gestão de Equipe -->
+                        <div class="card-right">
+                            <div class="card-header-flex">
+                                <div>
+                                    <h2>Gestão de Equipe Acadêmica</h2>
+                                    <p>Controle de papéis, acessos e permissões de coordenadores.</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="btn-icon"><i class='bx bx-filter-alt'></i></button>
+                                    <button class="btn-icon"><i class='bx bx-download'></i></button>
+                                </div>
+                            </div>
+
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>USUÁRIO</th>
+                                        <th>PAPEL ATUAL</th>
+                                        <th>STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="td-user">
+                                                <div class="avatar-initials bg-blue">AM</div>
+                                                <div class="td-user-info">
+                                                    <strong>Ana Maria de Souza</strong>
+                                                    <small>ana.maria@instituicao.edu</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select class="role-select">
+                                                <option>Secretaria</option>
+                                                <option>Coordenador</option>
+                                            </select>
+                                        </td>
+                                        <td><span class="status-pill status-ativo">Ativo</span></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <div class="td-user">
+                                                <div class="avatar-initials bg-orange">JL</div>
+                                                <div class="td-user-info">
+                                                    <strong>José Lucas Oliveira</strong>
+                                                    <small>jose.lucas@instituicao.edu</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select class="role-select">
+                                                <option selected>Coordenador</option>
+                                                <option>Secretaria</option>
+                                            </select>
+                                        </td>
+                                        <td><span class="status-pill status-ativo">Ativo</span></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            <div class="td-user">
+                                                <div class="avatar-initials bg-gray">BP</div>
+                                                <div class="td-user-info">
+                                                    <strong>Beatriz Pinheiro</strong>
+                                                    <small>beatriz.p@instituicao.edu</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select class="role-select">
+                                                <option selected>Visualizador</option>
+                                                <option>Coordenador</option>
+                                            </select>
+                                        </td>
+                                        <td><span class="status-pill status-suspenso">Suspenso</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <div class="table-footer">
+                                <p>Exibindo 4 de 12 usuários cadastrados</p>
+                                <div class="pagination-btns">
+                                    <button class="btn-page">ANTERIOR</button>
+                                    <button class="btn-page active">PRÓXIMO</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Cards Row -->
+                        <div class="bottom-cards-row">
+
+                            <!-- Logs -->
+                            <div class="card-logs">
+                                <h3>Logs de Segurança <i class='bx bx-shield-quarter'></i></h3>
+
+                                <div class="log-item">
+                                    <div class="log-time">[14:30]</div>
+                                    <div class="log-info">
+                                        <strong>Alteração de limite:</strong>
+                                        <p>Engenharia Civil p/ 240h</p>
+                                    </div>
+                                </div>
+
+                                <div class="log-item">
+                                    <div class="log-time">[12:15]</div>
+                                    <div class="log-info">
+                                        <strong>Novo usuário: Ana Maria</strong>
+                                        <p>(Secretaria)</p>
+                                    </div>
+                                </div>
+
+                                <div class="log-item">
+                                    <div class="log-time">[09:02]</div>
+                                    <div class="log-info">
+                                        <strong>Backup automático</strong>
+                                        <p>concluído com sucesso</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Export -->
+                            <div class="card-export">
+                                <div class="bg-shape-light-large"></div>
+                                <h3>Exportação Consolidada de Regras</h3>
+                                <p>Gere um relatório PDF com todas as regras de validação vigentes no sistema para
+                                    auditoria.</p>
+                                <button class="btn-link">BAIXAR RELATÓRIO <i class='bx bx-right-arrow-alt'></i></button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Footer text mimicking design -->
+            <div style="text-align: center; padding: 20px 0 40px; color: var(--texto-light); font-size: 11px;">
+                © 2024 <strong>Senac Brasil</strong> - Portal de Atividades Complementares
+                <div style="margin-top: 8px; display: flex; gap: 15px; justify-content: center;">
+                    <a href="#" style="color: var(--texto-light); text-decoration: none;">Privacidade</a>
+                    <a href="#" style="color: var(--texto-light); text-decoration: none;">Termos de Uso</a>
+                    <a href="#" style="color: var(--texto-light); text-decoration: none;">Suporte Técnico</a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script para ativar a aba atual na sidebar -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'configadm.html';
+            const links = document.querySelectorAll('.sidebar-dark .menu-navegacao .link-menu');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            if (localStorage.getItem('nome')) {
+                const nomeEl = document.getElementById('sidebar-nome-global');
+                if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
+
+                const avatarEl = document.getElementById('sidebar-avatar-global');
+                if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
+            }
+            if (localStorage.getItem('perfil')) {
+                const roleEl = document.getElementById('sidebar-role-global');
+                if (roleEl) roleEl.textContent = localStorage.getItem('perfil');
+            }
+        });
+    </script>
+</body>
+
+</html>

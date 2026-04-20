@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Gestão de Alunos</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/seu-estilo.css">
+    <link rel="stylesheet" href="/styles/alunos.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+</head>
+
+<body>
+    <script>
+        /**
+         * Bloqueia o acesso à página se o usuário não for COORDENADOR ou SUPER_ADMIN.
+         */
+        requireRole('COORDENADOR', 'SUPER_ADMIN');
+
+        // Função para gerar as cores das tags de curso automaticamente
+        function getCorCurso(cursoNome) {
+            const cores = [
+                { bg: 'rgba(139,92,246,.1)', color: '#7c3aed' }, // Roxo
+                { bg: 'rgba(37,99,235,.1)', color: '#2563eb' },  // Azul
+                { bg: 'rgba(245,158,11,.1)', color: '#d4800a' }, // Laranja
+                { bg: 'rgba(16,185,129,.1)', color: '#10b981' }, // Verde
+                { bg: 'rgba(100,116,139,.1)', color: '#64748b' } // Cinza
+            ];
+            let sum = 0;
+            if (cursoNome) {
+                for (let i = 0; i < cursoNome.length; i++) sum += cursoNome.charCodeAt(i);
+            }
+            return cores[sum % cores.length];
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+
+            const perfil = localStorage.getItem('perfil');
+
+            // --- 1. FUNÇÃO PARA DESENHAR A TABELA ---
+            function renderAlunos(alunos) {
+                const tbody = document.querySelector('.tabela-alunos tbody');
+                if (!tbody) return;
+
+                tbody.innerHTML = '';
+
+                if (!alunos || alunos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">Nenhum aluno encontrado no banco de dados.</td></tr>';
+
+                    // Zera os contadores
+                    const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
+                    if (totalEl) totalEl.textContent = '0';
+                    return;
+                }
+
+                // Atualiza KPI Total de Alunos
+                const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
+                if (totalEl) totalEl.textContent = alunos.length.toLocaleString('pt-BR');
+
+                alunos.slice(0, 20).forEach(a => {
+                    // Mapeamento seguro (ajuste os nomes conforme vem do seu banco)
+                    const nome = a.nome || a.full_name || 'Sem Nome';
+                    const email = a.email || '—';
+                    const ra = a.ra || a.matricula || a.id || '—';
+                    const semestre = a.semestre || a.periodo || '1';
+                    const statusLabel = a.status ? a.status.toUpperCase() : 'ATIVO';
+
+                    // Trata o curso (pode vir como string ou array igual nos coordenadores)
+                    let curso = a.curso || a.course_name || a.course_names || a.curso_nome || 'Não vinculado';
+                    if (Array.isArray(curso)) {
+                        curso = curso.length > 0 ? curso.join(', ') : 'Não vinculado';
+                    }
+
+                    const initials = getInitials(nome);
+                    const colorClass = initialsColor(nome); // bg-azul, bg-laranja, etc.
+                    const corCurso = getCorCurso(curso);
+
+                    // Estilo de Status
+                    let statusClass = 'status-ativo';
+                    if (statusLabel === 'TRANCADO' || statusLabel === 'INATIVO') statusClass = 'status-trancado';
+                    if (statusLabel === 'PENDENTE') statusClass = 'status-pendente-bad';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="td-aluno-row">
+                                <div class="avatar-circle ${colorClass}">${initials}</div>
+                                <div>
+                                    <strong>${nome}</strong>
+                                    <span class="email-aluno">${email}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="td-ra">${ra}</td>
+                        <td>
+                            <span class="tag-curso-aluno" style="background: ${corCurso.bg}; color: ${corCurso.color};">
+                                ${curso}
+                            </span>
+                        </td>
+                        <td class="td-semestre">${semestre}º</td>
+                        <td>
+                            <span class="status-badge-aluno ${statusClass}">
+                                <i class='bx bx-circle-fill' style="font-size:7px"></i> ${statusLabel}
+                            </span>
+                        </td>`;
+
+                    tbody.appendChild(tr);
+                });
+
+                const infoListagem = document.querySelector('.info-listagem span');
+                if (infoListagem) infoListagem.textContent = `Exibindo 1-${Math.min(alunos.length, 20)} de ${alunos.length.toLocaleString()} alunos`;
+            }
+
+            // --- 2. FUNÇÃO CENTRAL DE BUSCA ---
+            const fetchAlunos = () => {
+                // Busca Cursos para o Filtro
+                apiGet('/admin/cursos').then(cursos => {
+                    const select = document.querySelector('.select-filtro-grande');
+                    if (select && cursos && Array.isArray(cursos)) {
+                        cursos.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.textContent = c.nome_curso || c.nome || c.course_name;
+                            select.appendChild(opt);
+                        });
+                    }
+                }).catch(err => console.error("Filtro de cursos falhou silenciosamente", err));
+
+                // Lógica de busca de alunos
+                if (perfil === 'COORDENADOR') {
+                    apiGet('/aluno/meus-dados').then(me => {
+                        if (me && me.aluno && me.aluno.curso_id) {
+                            apiGet(`/coordenador/alunos/${me.aluno.curso_id}`).then(alunos => {
+                                let lista = Array.isArray(alunos) ? alunos : (alunos.data || alunos.alunos || []);
+                                renderAlunos(lista);
+                            }).catch(() => renderAlunos([]));
+                        } else {
+                            renderAlunos([]);
+                        }
+                    }).catch(() => renderAlunos([]));
+                } else {
+                    // Rota para SUPER_ADMIN (busca todos)
+                    apiGet('/admin/alunos').then(resposta => {
+                        console.log("Chegou da API de Alunos:", resposta);
+                        let lista = [];
+                        if (Array.isArray(resposta)) {
+                            lista = resposta;
+                        } else if (resposta && Array.isArray(resposta.data)) {
+                            lista = resposta.data;
+                        } else if (resposta && Array.isArray(resposta.alunos)) {
+                            lista = resposta.alunos;
+                        }
+                        renderAlunos(lista);
+                    }).catch(err => {
+                        console.error("A rota /admin/alunos falhou no backend", err);
+                        renderAlunos([]);
+                    });
+                }
+            };
+
+            // Aciona a busca
+            fetchAlunos();
+        });
+    </script>
+
+    <div class="layout-geral">
+
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
+                <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
+                <a href="relatorios.html" class="link-menu"><i class='bx bx-bar-chart-alt-2'></i> Relatórios</a>
+                <a href="configuracao.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div class="sidebar-bottom-action">
+                <div class="perfil-sidebar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <div class="perfil-sidebar-info">
+                        <strong id="sidebar-nome-global">Usuário</strong>
+                        <small id="sidebar-role-global">Gestão</small>
+                    </div>
+                </div>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (localStorage.getItem('nome')) {
+                    const nomeEl = document.getElementById('sidebar-nome-global');
+                    if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
+
+                    const avatarEl = document.getElementById('sidebar-avatar-global');
+                    if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
+                }
+                if (localStorage.getItem('perfil')) {
+                    const roleEl = document.getElementById('sidebar-role-global');
+                    if (roleEl) roleEl.textContent = localStorage.getItem('perfil');
+                }
+            });
+        </script>
+
+        <main class="conteudo-principal">
+
+            <header class="cabecalho-topo">
+                <div>
+                    <span class="titulo-portal">SENAC ERP</span>
+                    <span class="titulo-subportal">Portal Acadêmico</span>
+                </div>
+                <div class="caixa-busca">
+                    <i class='bx bx-search'></i>
+                    <input type="text" placeholder="Buscar por nome ou RA...">
+                </div>
+                <div class="acoes-usuario">
+                    <i class='bx bx-bell icon-header'></i>
+                    <div class="perfil-info">
+                        <strong>Admin Principal</strong>
+                        <small>Super Admin</small>
+                    </div>
+                    <div class="foto-perfil"></div>
+                </div>
+            </header>
+
+            <section class="cabecalho-pagina">
+                <div>
+                    <div class="breadcrumb">
+                        <span>GESTÃO ACADÊMICA</span>
+                        <i class='bx bx-chevron-right'></i>
+                        <span>ALUNOS</span>
+                        <i class='bx bx-chevron-right'></i>
+                        <span class="breadcrumb-ativo">VISÃO GERAL</span>
+                    </div>
+                    <h1>Gestão de Alunos</h1>
+                </div>
+                <div>
+                    <a href="novo-aluno.html" class="btn-solid" style="text-decoration:none;"><i
+                            class='bx bx-user-plus'></i> Novo Aluno</a>
+                </div>
+            </section>
+
+            <section class="kpi-row">
+                <div class="kpi-card-kpi">
+                    <span class="kpi-kpi-titulo">TOTAL DE ALUNOS</span>
+                    <div class="kpi-kpi-valor-row">
+                        <h2>0</h2>
+                        <span class="badge-kpi badge-verde-subir">
+                            <i class='bx bx-trending-up'></i> +9% este semestre
+                        </span>
+                    </div>
+                </div>
+
+                <div class="kpi-separador"></div>
+
+                <div class="kpi-card-kpi">
+                    <span class="kpi-kpi-titulo">MATRÍCULAS ATIVAS</span>
+                    <div class="kpi-kpi-valor-row">
+                        <h2>1,150</h2>
+                        <span class="badge-kpi badge-cinza-claro-kpi">
+                            89.5% do corpo docente
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-analise-performance">
+                    <div class="perf-header">
+                        <span class="perf-tag">Análise de Performance</span>
+                        <span class="perf-valor">8.4</span>
+                    </div>
+                    <p class="perf-texto">A média geral de GPA aumentou 0.2 pontos desde o último semestre, indicando
+                        engajamento acadêmico.</p>
+                    <a href="#" class="btn-perf-ver-relatorio">Ver Relatório Completo</a>
+                </div>
+            </section>
+
+            <section class="cartao-tabela-container">
+                <div class="filtros-barra">
+                    <div class="grupo-filtro-linha">
+                        <div class="campo-filtro">
+                            <label>Filtrar por Curso</label>
+                            <select class="select-filtro-grande">
+                                <option>Todos os Cursos</option>
+                            </select>
+                        </div>
+                        <div class="campo-filtro">
+                            <label>Semestre</label>
+                            <select class="select-filtro-grande">
+                                <option>2024.1</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-listagem">
+                    <span>Exibindo 0 alunos</span>
+                </div>
+
+                <table class="tabela-alunos">
+                    <thead>
+                        <tr>
+                            <th>NOME DO ALUNO</th>
+                            <th>RA</th>
+                            <th>CURSO</th>
+                            <th>SEMESTRE</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--texto-light); padding: 20px;">
+                                Carregando alunos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="rodape-tabela">
+                    <div class="paginacao-botoes">
+                        <button class="btn-pag"><i class='bx bx-chevron-left'></i></button>
+                        <button class="btn-pag active">1</button>
+                        <button class="btn-pag">2</button>
+                        <button class="btn-pag">9</button>
+                        <button class="btn-pag"><i class='bx bx-chevron-right'></i></button>
+                    </div>
+                    <span class="info-paginacao">PÁGINA 1 DE 129</span>
+                </div>
+            </section>
+
+            <section class="grade-cards-inferiores">
+                <div class="card-info-bottom card-dica-sistema">
+                    <div class="card-dica-icon">
+                        <i class='bx bx-bulb'></i>
+                    </div>
+                    <span class="card-dica-tag">Dica do Sistema</span>
+                    <h3>Auditoria de Matrículas</h3>
+                    <p>Realize a validação de frequently updates nas matrículas. O prazo para processamento sem taxa de
+                        multa finaliza próximo em 5 dias úteis.</p>
+                    <a href="#" class="link-ver-funcionalidade">VER FUNCIONALIDADE</a>
+                    <span class="link-complementar">CONHECER TODA A LISTA</span>
+                </div>
+
+                <div class="card-info-bottom card-calendario">
+                    <div class="calendario-header">
+                        <i class='bx bx-calendar'></i>
+                        <span>Calendário Acadêmico</span>
+                    </div>
+                    <div class="calendario-eventos">
+                        <div class="evento-item">
+                            <div class="evento-dot"></div>
+                            <div>
+                                <strong>2º Sem de Avaliações</strong>
+                                <span>22 Jan</span>
+                            </div>
+                        </div>
+                        <div class="evento-item">
+                            <div class="evento-dot cor-laranja"></div>
+                            <div>
+                                <strong>Lançamento das Notas</strong>
+                                <span>31 Mar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>
