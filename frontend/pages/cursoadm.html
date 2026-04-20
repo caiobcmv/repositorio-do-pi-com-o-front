@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Gestão de Cursos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+    <link rel="stylesheet" href="/styles/cursos_analise.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+</head>
+
+<body>
+    <script>
+        protegerPagina(['SUPER_ADMIN', 'COORDENADOR']);
+    </script>
+
+    <div class="layout-geral">
+
+        <!-- Sidebar -->
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
+                <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+                <a href="#" class="link-menu link-sair" onclick="if(typeof logout === 'function') logout();"><i
+                        class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="conteudo-principal">
+
+            <!-- Top Header Tabs -->
+            <header class="top-header-tabs">
+                <nav class="tabs-nav">
+                    <a href="cursosuperadm.html">Gestão</a>
+                    <a href="cursoadm.html" class="active">Análise</a>
+                    <a href="#">Suporte</a>
+                </nav>
+
+                <div class="header-actions">
+                    <i class='bx bx-bell'></i>
+                    <i class='bx bx-cog'></i>
+                    <div class="user-profile">
+                        <div class="info">
+                            <strong>SUPER ADM</strong>
+                            <small>Ricardo Silva</small>
+                        </div>
+                        <div class="avatar-circle"></div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-container">
+
+                <!-- Title Section -->
+                <div class="page-header">
+                    <div>
+                        <h1>Gestão de Cursos</h1>
+                        <p>Visualize e gerencie a grade acadêmica da instituição.</p>
+                    </div>
+                    <button class="btn-primary">
+                        <i class='bx bx-plus'></i> CRIAR NOVO CURSO
+                    </button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <div class="stat-title">CURSOS ATIVOS</div>
+                        <div class="stat-value">
+                            42 <span class="stat-badge">+4%</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-title">TOTAL COORDENADORES</div>
+                        <div class="stat-value">18</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-title">VAGAS PREENCHIDAS</div>
+                        <div class="stat-value">89%</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-title">NOVAS INSCRIÇÕES</div>
+                        <div class="stat-value">128</div>
+                    </div>
+
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="search-input-wrap">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Buscar curso ou coordenador...">
+                    </div>
+
+                    <select class="filter-select">
+                        <option>Todos os Status</option>
+                        <option>Ativo</option>
+                        <option>Pausado</option>
+                    </select>
+
+                    <button class="btn-filter-icon">
+                        <i class='bx bx-filter-alt'></i>
+                    </button>
+                </div>
+
+                <!-- Table -->
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NOME DO CURSO</th>
+                            <th>COORDENADOR VINCULADO</th>
+                            <th>DATA DE CRIAÇÃO</th>
+                            <th>STATUS</th>
+                            <th>AÇÕES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <!-- Row 1 -->
+                        <tr>
+                            <td>
+                                <div class="td-nome">
+                                    <div class="icon-box"><i class='bx bx-compass'></i></div>
+                                    <div class="td-nome-info">
+                                        <strong>Arquitetura e Urbanismo</strong>
+                                        <small>Bacharelado • 10 Semestres</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-coord">
+                                    <div class="coord-av"></div>
+                                    <span>Dra. Helena<br>Martins</span>
+                                </div>
+                            </td>
+                            <td class="td-data">12 Out 2023</td>
+                            <td><span class="status-pill status-ativo">ATIVO</span></td>
+                            <td></td>
+                        </tr>
+
+                        <!-- Row 2 -->
+                        <tr>
+                            <td>
+                                <div class="td-nome">
+                                    <div class="icon-box orange"><i class='bx bx-code-alt'></i></div>
+                                    <div class="td-nome-info">
+                                        <strong>Engenharia de Software</strong>
+                                        <small>Bacharelado • 8 Semestres</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-coord">
+                                    <div class="coord-av"></div>
+                                    <span>Prof. Marcos<br>André</span>
+                                </div>
+                            </td>
+                            <td class="td-data">15 Jan 2024</td>
+                            <td><span class="status-pill status-ativo">ATIVO</span></td>
+                            <td></td>
+                        </tr>
+
+                        <!-- Row 3 -->
+                        <tr>
+                            <td>
+                                <div class="td-nome">
+                                    <div class="icon-box"><i class='bx bx-money'></i></div>
+                                    <div class="td-nome-info">
+                                        <strong>Ciências Contábeis</strong>
+                                        <small>Bacharelado • 8 Semestres</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-coord">
+                                    <div class="coord-av"></div>
+                                    <span>Dra. Aline<br>Souza</span>
+                                </div>
+                            </td>
+                            <td class="td-data">05 Fev 2024</td>
+                            <td><span class="status-pill status-pausado">PAUSADO</span></td>
+                            <td></td>
+                        </tr>
+
+                        <!-- Row 4 -->
+                        <tr>
+                            <td>
+                                <div class="td-nome">
+                                    <div class="icon-box"><i class='bx bx-shield-plus'></i></div>
+                                    <div class="td-nome-info">
+                                        <strong>Enfermagem</strong>
+                                        <small>Tecnólogo • 6 Semestres</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="td-coord">
+                                    <div class="coord-av"></div>
+                                    <span>Prof. Carlos<br>Lima</span>
+                                </div>
+                            </td>
+                            <td class="td-data">18 Dez 2023</td>
+                            <td><span class="status-pill status-ativo">ATIVO</span></td>
+                            <td></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="pagination-area">
+                    <span class="pagination-text">EXIBINDO 4 DE 42 CURSOS</span>
+                    <div class="pagination-controls">
+                        <button class="page-btn"><i class='bx bx-chevron-left'></i></button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn"><i class='bx bx-chevron-right'></i></button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="footer-text">
+                    © 2024 SENAC ERP • SISTEMA DE GESTÃO ACADÊMICA UNIFICADO
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+
+</html>

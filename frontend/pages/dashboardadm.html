@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Dashboard Administrativo</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/dasboardadm.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+</head>
+
+<body>
+    <script>
+        protegerPagina(['SUPER_ADMIN', 'COORDENADOR']);
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Fetch dashboard data
+                const data = await apiGet('/dashboard/coordenador');
+                if (!data || data.erro) {
+                    console.error('Erro ao carregar dashboard:', data?.erro);
+                    return;
+                }
+
+                // 1. Atualizar KPIs
+                const kpiValores = document.querySelectorAll('.kpi-dash-valor');
+                if (kpiValores.length >= 3) {
+                    // Protocolos Pendentes
+                    kpiValores[0].textContent = data.metricas?.pendentes || 0;
+                    // Alunos Ativos (UI label says 'Horas Faltantes', but data is total_alunos)
+                    kpiValores[1].textContent = data.total_alunos || 0;
+                    // Média de horas por curso
+                    kpiValores[2].textContent = data.metricas?.media_horas || 0;
+                }
+
+                // 2. Atualizar Gráfico de Barras (Envios por Categoria)
+                const containerBarras = document.querySelector('.barras-container');
+                if (containerBarras && data.por_categoria && data.por_categoria.length > 0) {
+                    // Descobrir o valor máximo para calcular a porcentagem da barra
+                    const maxEnvios = Math.max(...data.por_categoria.map(c => parseInt(c.total)));
+
+                    const cores = ['bg-azul-escuro', 'bg-azul-claro', 'bg-laranja', 'bg-azul-acinzentado'];
+
+                    containerBarras.innerHTML = data.por_categoria.map((cat, index) => {
+                        const total = parseInt(cat.total);
+                        const percent = maxEnvios > 0 ? (total / maxEnvios) * 100 : 0;
+                        const cor = cores[index % cores.length];
+
+                        return `
+                            <div class="linha-barra">
+                                <span class="rotulo-barra">${cat.categoria.toUpperCase()}</span>
+                                <div class="barra-fundo">
+                                    <div class="barra-preenchimento ${cor}" style="width: ${percent}%;"></div>
+                                </div>
+                                <span class="valor-barra">${total}</span>
+                            </div>
+                        `;
+                    }).join('');
+                } else if (containerBarras) {
+                    containerBarras.innerHTML = '<p style="padding: 20px; color: #64748b;">Nenhum dado encontrado.</p>';
+                }
+
+                // 3. Atualizar Últimas Atividades
+                const containerAtividades = document.querySelector('.lista-atividades');
+                if (containerAtividades && data.ultimas_atividades && data.ultimas_atividades.length > 0) {
+                    containerAtividades.innerHTML = data.ultimas_atividades.map(ativ => {
+                        // Formatar tempo (aproximação simples)
+                        const tempo = formatarTempoDecorrido(ativ.submitted_at);
+
+                        let icone = 'bx-file-blank';
+                        let corIcone = 'icone-azul';
+                        let descStatus = `Categoria: ${ativ.categoria || 'Geral'}`;
+
+                        if (ativ.status === 'approved') {
+                            icone = 'bx-check-circle';
+                            corIcone = 'icone-verde';
+                            descStatus = 'Atividade aprovada com sucesso.';
+                        } else if (ativ.status === 'rejected') {
+                            icone = 'bx-error';
+                            corIcone = 'icone-laranja';
+                            descStatus = 'Atividade rejeitada ou devolvida.';
+                        }
+
+                        return `
+                            <div class="item-atividade">
+                                <div class="icone-atividade ${corIcone}"><i class='bx ${icone}'></i></div>
+                                <div class="info-atividade">
+                                    <div class="atividade-titulo">
+                                        <span>${ativ.nome_aluno} enviou certificado</span>
+                                        <span class="tempo">${tempo}</span>
+                                    </div>
+                                    <div class="atividade-desc">${descStatus}</div>
+                                    ${ativ.status === 'submitted' ? `
+                                    <div class="atividade-acoes">
+                                        <button class="btn-validar" onclick="window.location.href='analise_certificado.html?id=${ativ.id}'">Analisar</button>
+                                    </div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else if (containerAtividades) {
+                    containerAtividades.innerHTML = '<p style="padding: 20px; color: #64748b;">Nenhuma atividade recente.</p>';
+                }
+
+            } catch (err) {
+                console.error("Falha de conexão com a API", err);
+            }
+        });
+
+        // Função auxiliar para exibir o tempo
+        function formatarTempoDecorrido(dataString) {
+            if (!dataString) return '';
+            const data = new Date(dataString);
+            const diffMs = new Date() - data;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 60) return `${diffMins}M AGO`;
+            const diffHoras = Math.floor(diffMins / 60);
+            if (diffHoras < 24) return `${diffHoras}H AGO`;
+            return `${Math.floor(diffHoras / 24)}D AGO`;
+        }
+    </script>
+
+    <div class="layout-geral">
+        <!-- Sidebar -->
+        <!-- Sidebar Unificada -->
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac"
+                    class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="dashboardadm.html" class="link-menu"><i class='bx bx-grid-alt'></i> Dashboard</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="protocoloadm.html" class="link-menu"><i class='bx bx-file'></i> Protocolos</a>
+                <a href="submissoes.html" class="link-menu"><i class='bx bx-upload'></i> Submissões</a>
+                <a href="relatorios.html" class="link-menu"><i class='bx bx-bar-chart-alt-2'></i> Relatórios</a>
+                <a href="configuracao.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div class="sidebar-bottom-action">
+                <div class="perfil-sidebar">
+                    <img id="sidebar-avatar-global"
+                        src="https://ui-avatars.com/api/?name=U+S&background=0056b3&color=fff" alt="Avatar">
+                    <div class="perfil-sidebar-info">
+                        <strong id="sidebar-nome-global">Usuário</strong>
+                        <small id="sidebar-role-global">Gestão</small>
+                    </div>
+                </div>
+                <a href="#" class="link-menu link-sair"
+                    onclick="if(typeof logout === 'function') logout(); else window.location.href='index.html';"><i
+                        class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Script para ativar a aba atual e carregar dados do usuário -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const currentPage = window.location.pathname.split('/').pop() || 'dashboardadm.html';
+                const links = document.querySelectorAll('.sidebar-dark .menu-navegacao .link-menu');
+                links.forEach(link => {
+                    if (link.getAttribute('href') === currentPage) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+
+                if (localStorage.getItem('nome')) {
+                    const nomeEl = document.getElementById('sidebar-nome-global');
+                    if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
+
+                    const avatarEl = document.getElementById('sidebar-avatar-global');
+                    if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
+                }
+                if (localStorage.getItem('perfil')) {
+                    const roleEl = document.getElementById('sidebar-role-global');
+                    if (roleEl) roleEl.textContent = localStorage.getItem('perfil');
+                }
+            });
+        </script>
+
+        <!-- Main Content -->
+        <main class="conteudo-principal">
+            <!-- Header Topo -->
+            <header class="cabecalho-topo">
+                <div class="topo-links">
+                    <a href="#" class="active">Início</a>
+                    <a href="#">Certificados</a>
+                    <a href="#">Dúvidas</a>
+                </div>
+                <div class="topo-actions">
+                    <div class="caixa-busca">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Buscar alunos, protocolos...">
+                    </div>
+                    <i class='bx bx-bell icon-header'></i>
+                    <i class='bx bx-cog icon-header'></i>
+                    <button class="btn-novo-protocolo">Novo Protocolo</button>
+                </div>
+            </header>
+
+            <!-- Titulo Area -->
+            <section class="secao-titulo">
+                <div class="titulo-esq">
+                    <span class="etiqueta-amarela">VISÃO GERAL ACADÊMICA</span>
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="titulo-dir">
+                    <strong>Semestre Letivo 2024.1</strong>
+                    <span>Atualizado há 12 minutos</span>
+                </div>
+            </section>
+
+            <!-- Cards Superiores -->
+            <section class="grid-cards-top">
+                <div class="card-kpi">
+                    <div class="card-kpi-titulo">PROTOCOLOS PENDENTES</div>
+                    <div class="card-kpi-valor">
+                        <span class="valor-azul kpi-dash-valor">42</span>
+                        <span class="variacao variacao-positiva">+12% vs. ontem</span>
+                    </div>
+                    <i class='bx bx-clipboard card-kpi-bg-icon'></i>
+                </div>
+
+                <div class="card-kpi">
+                    <div class="card-kpi-titulo">TOTAL DE ALUNOS</div>
+                    <div class="card-kpi-valor">
+                        <span class="valor-escuro kpi-dash-valor">128</span>
+                        <span class="variacao variacao-neutra">-5% estático</span>
+                    </div>
+                    <div class="card-kpi-footer">
+                        <i class='bx bx-group'></i> Alunos vinculados aos seus cursos
+                    </div>
+                </div>
+
+                <div class="card-kpi">
+                    <div class="card-kpi-titulo">MÉDIA DE HORAS / CURSO</div>
+                    <div class="card-kpi-valor">
+                        <span class="valor-laranja kpi-dash-valor">84.5</span>
+                        <span class="variacao-texto">h/semestre</span>
+                    </div>
+                    <div class="card-kpi-chart">
+                        <div class="bar bar-laranja" style="width: 25%"></div>
+                        <div class="bar bar-laranja" style="width: 20%"></div>
+                        <div class="bar bar-laranja" style="width: 25%"></div>
+                        <div class="bar bar-cinza" style="width: 30%"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Middle Section -->
+            <section class="grid-middle">
+                <!-- Envios por Categoria -->
+                <div class="card-content">
+                    <div class="card-header">
+                        <h2>Envios por Categoria</h2>
+                        <div class="toggle-periodo">
+                            <button class="active">MENSAL</button>
+                            <button>ANUAL</button>
+                        </div>
+                    </div>
+                    <div class="barras-container">
+                        <div class="linha-barra">
+                            <span class="rotulo-barra">EXTENSÃO</span>
+                            <div class="barra-fundo">
+                                <div class="barra-preenchimento bg-azul-escuro" style="width: 80%;"></div>
+                            </div>
+                            <span class="valor-barra">142</span>
+                        </div>
+                        <div class="linha-barra">
+                            <span class="rotulo-barra">PESQUISA</span>
+                            <div class="barra-fundo">
+                                <div class="barra-preenchimento bg-azul-claro" style="width: 50%;"></div>
+                            </div>
+                            <span class="valor-barra">86</span>
+                        </div>
+                        <div class="linha-barra">
+                            <span class="rotulo-barra">CULTURAIS</span>
+                            <div class="barra-fundo">
+                                <div class="barra-preenchimento bg-laranja" style="width: 30%;"></div>
+                            </div>
+                            <span class="valor-barra">54</span>
+                        </div>
+                        <div class="linha-barra">
+                            <span class="rotulo-barra">MONITORIA</span>
+                            <div class="barra-fundo">
+                                <div class="barra-preenchimento bg-azul-acinzentado" style="width: 65%;"></div>
+                            </div>
+                            <span class="valor-barra">112</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Últimas Atividades -->
+                <div class="card-content card-atividades">
+                    <div class="card-header">
+                        <h2>Últimas Atividades</h2>
+                    </div>
+                    <div class="lista-atividades">
+                        <div class="item-atividade">
+                            <div class="icone-atividade icone-azul"><i class='bx bx-file-blank'></i></div>
+                            <div class="info-atividade">
+                                <div class="atividade-titulo"><span>Ana Beatriz enviou certificado</span><span
+                                        class="tempo">1H AGO</span></div>
+                                <div class="atividade-desc">Categoria: Extensão - 20h solicitadas.</div>
+                                <div class="atividade-acoes">
+                                    <button class="btn-validar">Validar</button>
+                                    <button class="btn-detalhes">Detalhes</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item-atividade">
+                            <div class="icone-atividade icone-laranja"><i class='bx bx-error'></i></div>
+                            <div class="info-atividade">
+                                <div class="atividade-titulo"><span>Alerta de Prazo: Formandos</span><span
+                                        class="tempo">1H AGO</span></div>
+                                <div class="atividade-desc">15 alunos ainda não atingiram o mínimo de horas culturais.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="item-atividade">
+                            <div class="icone-atividade icone-verde"><i class='bx bx-check-circle'></i></div>
+                            <div class="info-atividade">
+                                <div class="atividade-titulo"><span>Protocolo #882 Aprovado</span><span class="tempo">3H
+                                        AGO</span></div>
+                                <div class="atividade-desc">Marcos Vinícius - Atividade de Monitoria concluída.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-atividades">
+                        <a href="#">VER TODO O HISTÓRICO</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bottom Section -->
+            <section class="grid-bottom">
+                <div class="card-relatorio">
+                    <div class="relatorio-conteudo">
+                        <h2>Relatório Consolidado</h2>
+                        <p>Gere a análise completa de desempenho das turmas para o conselho acadêmico.</p>
+                        <a href="#" class="btn-baixar">BAIXAR PDF <i class='bx bx-right-arrow-alt'></i></a>
+                    </div>
+                    <div class="relatorio-bg-text">WORK</div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="rodape-dashboard">
+                <h4>Senac</h4>
+                <div class="rodape-links">
+                    <a href="#">Privacidade</a>
+                    <a href="#">Termos de Uso</a>
+                    <a href="#">Suporte Técnico</a>
+                </div>
+                <p>&copy; 2024 Senac Brasil - Portal de Atividades Complementares</p>
+            </footer>
+        </main>
+    </div>
+</body>
+
+</html>

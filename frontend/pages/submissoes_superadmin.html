@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senac - Listagem de Submissões</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/styles/sidebar.css">
+    <link rel="stylesheet" href="/styles/submissoes_superadmin.css">
+    <script src="/services/apiHelper.js"></script>
+    <script src="/services/script.js"></script>
+</head>
+<body>
+    <div class="layout-geral">
+        
+        <!-- Sidebar Unificada -->
+        <aside class="sidebar-dark">
+            <div class="logo-secao">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/86/Senac_logo.svg" alt="Senac" class="logo-img">
+                <span class="logo-subtext">GESTÃO ACADÊMICA</span>
+            </div>
+
+            <nav class="menu-navegacao">
+                <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
+                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+                <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
+                <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
+                <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
+            </nav>
+
+            <div class="sidebar-bottom-action">
+                <a href="#" class="link-menu link-sair"><i class='bx bx-log-out'></i> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="conteudo-principal">
+            
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="top-header-left">
+                    <h2>Portal Acadêmico</h2>
+                    <div class="search-wrap">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Buscar submissões por nome ou RA...">
+                    </div>
+                </div>
+                
+                <div class="header-right">
+                    <i class='bx bx-bell icon-header'></i>
+                    <i class='bx bx-help-circle icon-header'></i>
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <small>Coordenador de TI</small>
+                            <strong>Ricardo Mendes</strong>
+                        </div>
+                        <img src="https://ui-avatars.com/api/?name=R+M&background=f6821f&color=fff" alt="User">
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-container">
+                
+                <!-- Title & Actions -->
+                <div class="header-action-row">
+                    <div class="page-title">
+                        <h1>Listagem de Submissões</h1>
+                        <p>Gestão de horas complementares e atividades extracurriculares.</p>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-export">
+                            <i class='bx bx-download'></i> Exportar CSV
+                        </button>
+                        <button class="btn-primary">
+                            <i class='bx bx-plus'></i> Nova Atividade
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPIs -->
+                <div class="kpis-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap icon-blue">
+                            <i class='bx bx-file'></i>
+                        </div>
+                        <div class="kpi-title">PENDENTES</div>
+                        <div class="kpi-val-row">
+                            <div class="kpi-value">24</div>
+                            <div class="kpi-sub sub-orange">+5 hoje</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap icon-green">
+                            <i class='bx bx-check-circle'></i>
+                        </div>
+                        <div class="kpi-title">APROVADAS</div>
+                        <div class="kpi-val-row">
+                            <div class="kpi-value">142</div>
+                            <div class="kpi-sub sub-green">Este mês</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap icon-red">
+                            <i class='bx bx-x-circle'></i>
+                        </div>
+                        <div class="kpi-title">REPROVADAS</div>
+                        <div class="kpi-val-row">
+                            <div class="kpi-value">18</div>
+                            <div class="kpi-sub sub-gray">8% do total</div>
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-icon-wrap icon-orange">
+                            <i class='bx bx-time-five'></i>
+                        </div>
+                        <div class="kpi-title">MÉDIA DE RESPOSTA</div>
+                        <div class="kpi-val-row">
+                            <div class="kpi-value">48h</div>
+                            <div class="kpi-sub sub-orange">SLA Normal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Area -->
+                <div class="table-container">
+                    
+                    <!-- Filters -->
+                    <div class="filters-row">
+                        <div class="tabs-filter">
+                            <span>Filtros:</span>
+                            <button class="active">Todas</button>
+                            <button>Pendentes (24)</button>
+                            <button>Aprovadas</button>
+                            <button>Reprovadas</button>
+                        </div>
+                        <div class="selects-filter">
+                            <select>
+                                <option>Todos os Cursos</option>
+                            </select>
+                            <select>
+                                <option>Mais recentes</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Data Table -->
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ALUNO</th>
+                                <th>ATIVIDADE</th>
+                                <th>HORAS</th>
+                                <th>DATA DE ENVIO</th>
+                                <th>STATUS</th>
+                                <th>AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="td-user">
+                                        <img src="https://ui-avatars.com/api/?name=L+O&background=random" alt="Lucas">
+                                        <div class="td-user-info">
+                                            <strong>Lucas Oliveira Silva</strong>
+                                            <small>RA: 2023001542 • ADS</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-activity">
+                                        <strong>Workshop de UX/UI Design</strong>
+                                        <span class="badge-cat badge-blue">CURSO COMPLEMENTAR</span>
+                                    </div>
+                                </td>
+                                <td class="td-hours">20h</td>
+                                <td class="td-date">12 Out,<br>2023</td>
+                                <td><span class="status-pill status-pendente">Pendente</span></td>
+                                <td class="td-actions"><i class='bx bx-dots-vertical-rounded'></i></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="td-user">
+                                        <img src="https://ui-avatars.com/api/?name=A+C&background=random" alt="Ana">
+                                        <div class="td-user-info">
+                                            <strong>Ana Clara Mendes</strong>
+                                            <small>RA: 2023000891 • DESIGN</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-activity">
+                                        <strong>Palestra: Futuro da IA</strong>
+                                        <span class="badge-cat badge-purple">EVENTO</span>
+                                    </div>
+                                </td>
+                                <td class="td-hours">04h</td>
+                                <td class="td-date">11 Out,<br>2023</td>
+                                <td><span class="status-pill status-aprovado">Aprovado</span></td>
+                                <td class="td-actions"><i class='bx bx-dots-vertical-rounded'></i></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="td-user">
+                                        <img src="https://ui-avatars.com/api/?name=M+F&background=random" alt="Mateus">
+                                        <div class="td-user-info">
+                                            <strong>Mateus Ferreira</strong>
+                                            <small>RA: 2022011233 • ADS</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-activity">
+                                        <strong>Monitoria de Algoritmos</strong>
+                                        <span class="badge-cat badge-orange">MONITORIA</span>
+                                    </div>
+                                </td>
+                                <td class="td-hours">40h</td>
+                                <td class="td-date">10 Out,<br>2023</td>
+                                <td><span class="status-pill status-reprovado">Reprovado</span></td>
+                                <td class="td-actions"><i class='bx bx-dots-vertical-rounded'></i></td>
+                            </tr>
+
+                            <tr>
+                                <td>
+                                    <div class="td-user">
+                                        <img src="https://ui-avatars.com/api/?name=J+S&background=random" alt="Júlia">
+                                        <div class="td-user-info">
+                                            <strong>Júlia Santos</strong>
+                                            <small>RA: 2023009988 • GESTÃO</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="td-activity">
+                                        <strong>Voluntariado Senac Portas Abertas</strong>
+                                        <span class="badge-cat badge-green">SOCIAL</span>
+                                    </div>
+                                </td>
+                                <td class="td-hours">08h</td>
+                                <td class="td-date">09 Out,<br>2023</td>
+                                <td><span class="status-pill status-pendente">Pendente</span></td>
+                                <td class="td-actions"><i class='bx bx-dots-vertical-rounded'></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination-row">
+                        <div class="pagination-info">
+                            Mostrando <strong>1-10</strong> de <strong>184</strong> submissões
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="page-btn arrow"><i class='bx bx-chevron-left'></i></button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <span class="page-btn arrow">...</span>
+                            <button class="page-btn">19</button>
+                            <button class="page-btn arrow"><i class='bx bx-chevron-right'></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Banner -->
+                <div class="bottom-banner">
+                    <div class="banner-bg-shape"></div>
+                    <div class="banner-content">
+                        <span class="banner-tag">DICA DE PRODUTIVIDADE</span>
+                        <h3>Análise em Lote</h3>
+                        <p>Você sabia que pode selecionar múltiplas submissões para aprová-las de uma vez? Utilize a caixa de seleção na lateral para agilizar seu fluxo de trabalho durante períodos de alta demanda.</p>
+                        <button class="btn-white">Aprender como usar</button>
+                    </div>
+                    
+                    <div class="banner-shortcuts">
+                        <div class="shortcuts-title">Atalhos de Teclado</div>
+                        
+                        <div class="shortcut-item">
+                            <span>Aprovar selecionados</span>
+                            <span class="key-badge">Alt + A</span>
+                        </div>
+                        
+                        <div class="shortcut-item">
+                            <span>Ver detalhes</span>
+                            <span class="key-badge">Alt + V</span>
+                        </div>
+                        
+                        <div class="shortcut-item">
+                            <span>Próxima página</span>
+                            <span class="key-badge">Alt + N</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
