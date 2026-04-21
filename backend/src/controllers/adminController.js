@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+﻿const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const registrarLog = require('../utils/logger');
 
@@ -46,7 +46,7 @@ exports.putAtualizarCurso = async (req, res) => {
         );
 
         if (resultado.rows.length === 0) {
-            return res.status(404).json({ erro: "Curso não encontrado." });
+            return res.status(404).json({ erro: "Curso nÃ£o encontrado." });
         }
 
         await registrarLog(req.usuario.id, 'ATUALIZAR_CURSO', 'courses', id, { name, code });
@@ -68,7 +68,7 @@ exports.deleteCurso = async (req, res) => {
         );
 
         if (resultado.rows.length === 0) {
-            return res.status(404).json({ erro: "Curso não encontrado." });
+            return res.status(404).json({ erro: "Curso nÃ£o encontrado." });
         }
 
         await registrarLog(req.usuario.id, 'DELETAR_CURSO', 'courses', id, {});
@@ -132,7 +132,7 @@ exports.postCadastrarCoordenador = async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6)`,
             [userId, departamento, cargo, data_nascimento, data_admissao, observacoes_internas]
         );
-        
+
         if (course_ids && course_ids.length > 0) {
             for (const course_id of course_ids) {
                 await client.query(
@@ -174,7 +174,7 @@ exports.putAtualizarCoordenador = async (req, res) => {
 
         if (coord.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ erro: "Coordenador não encontrado." });
+            return res.status(404).json({ erro: "Coordenador nÃ£o encontrado." });
         }
 
         // Atualiza users
@@ -233,7 +233,7 @@ exports.deleteCoordenador = async (req, res) => {
         );
 
         if (coord.rows.length === 0) {
-            return res.status(404).json({ erro: "Coordenador não encontrado." });
+            return res.status(404).json({ erro: "Coordenador nÃ£o encontrado." });
         }
 
         // ON DELETE CASCADE cuida de user_roles, course_coordinators e coordinator_profiles
@@ -303,4 +303,50 @@ exports.getListaAlunos = async (req, res) => {
     } catch (err) {
         res.status(500).json({ erro: "Erro ao buscar alunos: " + err.message });
     }
+};
+
+
+// --- Categorias ---
+exports.getListaCategorias = async (req, res) => {
+    try {
+        const r = await pool.query('SELECT id, name, peso_horas, limite_max_horas, is_active FROM categories ORDER BY name');
+        res.status(200).json(r.rows);
+    } catch(err){ res.status(500).json({ erro: err.message }); }
+};
+
+exports.postCriarCategoria = async (req, res) => {
+    const { name, peso_horas, limite_max_horas } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ erro: 'Nome obrigatorio.' });
+    try {
+        const sql = 'INSERT INTO categories (name, peso_horas, limite_max_horas) VALUES ($1,$2,$3) RETURNING *';
+        const r = await pool.query(sql,[name.trim(), parseFloat(peso_horas)||1.0, parseFloat(limite_max_horas)||40]);
+        await registrarLog(req.usuario.id,'CRIAR_CATEGORIA','categories',r.rows[0].id,{name});
+        res.status(201).json({ mensagem:'Categoria criada!', categoria:r.rows[0] });
+    } catch(err){ res.status(500).json({ erro: err.message }); }
+};
+
+exports.deleteCategoria = async (req, res) => {
+    try {
+        await pool.query('UPDATE categories SET is_active=false WHERE id=$1',[req.params.id]);
+        await registrarLog(req.usuario.id,'DELETAR_CATEGORIA','categories',req.params.id,{});
+        res.status(200).json({ mensagem:'Categoria desativada.' });
+    } catch(err){ res.status(500).json({ erro: err.message }); }
+};
+
+// --- Logs ---
+exports.getLogs = async (req, res) => {
+    const limite = parseInt(req.query.limite)||20;
+    try {
+        const sql = 'SELECT al.id,al.action,al.entity_name,al.created_at,u.full_name AS usuario_nome FROM audit_logs al LEFT JOIN users u ON u.id=al.user_id ORDER BY al.created_at DESC LIMIT $1';
+        const r = await pool.query(sql,[limite]);
+        res.status(200).json(r.rows);
+    } catch(err){ res.status(500).json({ erro: err.message }); }
+};
+
+// --- Limites Cursos ---
+exports.getLimitesCursos = async (req, res) => {
+    try {
+        const r = await pool.query('SELECT c.id,c.name,c.code,c.minimum_required_hours FROM courses c WHERE c.is_active=true ORDER BY c.name');
+        res.status(200).json(r.rows);
+    } catch(err){ res.status(500).json({ erro: err.message }); }
 };

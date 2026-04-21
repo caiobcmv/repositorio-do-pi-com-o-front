@@ -1,4 +1,4 @@
-const pool = require('../config/database');
+﻿const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const registrarLog = require('../utils/logger');
 const { emailResultadoSubmissao } = require('../services/emailService');
@@ -30,7 +30,7 @@ exports.postCriarRegra = async (req, res) => {
             [category_id]
         );
         if (categoria.rows.length === 0) {
-            return res.status(404).json({ erro: "Categoria não encontrada." });
+            return res.status(404).json({ erro: "Categoria nÃ£o encontrada." });
         }
 
         const resultado = await pool.query(
@@ -74,7 +74,7 @@ exports.putAtualizarRegra = async (req, res) => {
             [id]
         );
         if (regra.rows.length === 0) {
-            return res.status(404).json({ erro: "Regra não encontrada." });
+            return res.status(404).json({ erro: "Regra nÃ£o encontrada." });
         }
 
         const resultado = await pool.query(
@@ -100,7 +100,7 @@ exports.deleteRegra = async (req, res) => {
             `SELECT * FROM course_activity_rules WHERE id = $1`, [id]
         );
         if (regra.rows.length === 0) {
-            return res.status(404).json({ erro: "Regra não encontrada." });
+            return res.status(404).json({ erro: "Regra nÃ£o encontrada." });
         }
 
         await pool.query(`DELETE FROM course_activity_rules WHERE id = $1`, [id]);
@@ -189,7 +189,7 @@ exports.putAtualizarAluno = async (req, res) => {
         const aluno = await client.query(`SELECT * FROM users WHERE id = $1`, [id]);
         if (aluno.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ erro: "Aluno não encontrado." });
+            return res.status(404).json({ erro: "Aluno nÃ£o encontrado." });
         }
 
         await client.query(
@@ -230,7 +230,7 @@ exports.deleteAluno = async (req, res) => {
     try {
         const aluno = await pool.query(`SELECT * FROM users WHERE id = $1`, [id]);
         if (aluno.rows.length === 0) {
-            return res.status(404).json({ erro: "Aluno não encontrado." });
+            return res.status(404).json({ erro: "Aluno nÃ£o encontrado." });
         }
 
         // ON DELETE CASCADE cuida de user_roles, user_courses, submissions
@@ -329,7 +329,7 @@ exports.getSubmissaoPorId = async (req, res) => {
         );
 
         if (resultado.rows.length === 0) {
-            return res.status(404).json({ erro: "Submissão não encontrada." });
+            return res.status(404).json({ erro: "SubmissÃ£o nÃ£o encontrada." });
         }
 
         res.status(200).json(resultado.rows[0]);
@@ -358,7 +358,7 @@ exports.patchValidarSubmissao = async (req, res) => {
         );
         if (submissaoAtual.rows.length === 0) {
             await client.query('ROLLBACK');
-            return res.status(404).json({ erro: "Submissão não encontrada." });
+            return res.status(404).json({ erro: "SubmissÃ£o nÃ£o encontrada." });
         }
 
         const previousStatus = submissaoAtual.rows[0].status;
@@ -412,14 +412,14 @@ exports.patchValidarSubmissao = async (req, res) => {
                     submissao.rows[0].user_course_id,
                     id,
                     `submission_${status_final}`,
-                    `Sua submissão foi ${status_final === 'approved' ? 'aprovada' : status_final === 'rejected' ? 'reprovada' : 'devolvida para ajuste'}`,
+                    `Sua submissÃ£o foi ${status_final === 'approved' ? 'aprovada' : status_final === 'rejected' ? 'reprovada' : 'devolvida para ajuste'}`,
                     comment || ''
                 ]
             );
         }
 
         await registrarLog(req.usuario.id, 'VALIDAR_SUBMISSAO', 'submissions', id, { status_final, approved_hours });
-        res.status(200).json({ mensagem: "Submissão validada!", dados: submissao.rows[0] });
+        res.status(200).json({ mensagem: "SubmissÃ£o validada!", dados: submissao.rows[0] });
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(500).json({ erro: err.message });

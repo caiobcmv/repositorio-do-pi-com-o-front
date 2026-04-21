@@ -31,7 +31,7 @@
 
             <nav class="menu-navegacao">
                 <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
-                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
+
                 <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
                 <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
                 <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
@@ -250,6 +250,121 @@
             </div>
         </main>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const currentPage = window.location.pathname.split('/').pop() || 'cursoadm.html';
+            const links = document.querySelectorAll('.sidebar-dark .menu-navegacao .link-menu');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPage) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Fetch data
+            try {
+                const [cursosResponse, coordResponse] = await Promise.all([
+                    apiGet('/admin/cursos'),
+                    apiGet('/admin/coordenadores')
+                ]);
+
+                const cursos = Array.isArray(cursosResponse) ? cursosResponse : [];
+                const coordenadores = Array.isArray(coordResponse) ? coordResponse : [];
+
+                // Update KPIs
+                const kpiValues = document.querySelectorAll('.stat-value');
+                if (kpiValues.length >= 2) {
+                    const ativos = cursos.filter(c => c.is_active !== false).length;
+                    kpiValues[0].innerHTML = `${ativos} <span class="stat-badge">+4%</span>`;
+                    kpiValues[1].innerHTML = `${coordenadores.length}`;
+                    // Leaving the other KPIs as static/placeholders
+                }
+
+                // Render Table
+                const tbody = document.querySelector('table tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+
+                    if (cursos.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">Nenhum curso encontrado.</td></tr>';
+                    } else {
+                        cursos.forEach(curso => {
+                            // Find coordinator
+                            const coord = coordenadores.find(c => c.course_ids && c.course_ids.includes(curso.id));
+
+                            // Format date
+                            let dataCriacao = 'N/D';
+                            if (curso.created_at) {
+                                const d = new Date(curso.created_at);
+                                const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                                dataCriacao = `${d.getDate().toString().padStart(2, '0')} ${meses[d.getMonth()]} ${d.getFullYear()}`;
+                            }
+
+                            // Status
+                            const isAtivo = curso.is_active !== false;
+                            const statusClass = isAtivo ? 'status-ativo' : (curso.is_active === null ? 'status-pausado' : 'status-inativo');
+                            const statusText = isAtivo ? 'ATIVO' : (curso.is_active === null ? 'PAUSADO' : 'INATIVO');
+
+                            // Coordinator info
+                            let coordHtml = `
+                                <div class="td-coord">
+                                    <div class="coord-av" style="background: #f8fafc; color: #cbd5e1; border: 1px dashed #cbd5e1; display:flex; align-items:center; justify-content:center;">NA</div>
+                                    <span>Pendente<br>vinculação</span>
+                                </div>
+                            `;
+
+                            if (coord) {
+                                const initial = coord.full_name ? coord.full_name.charAt(0).toUpperCase() : 'C';
+                                const [firstName, ...rest] = coord.full_name ? coord.full_name.split(' ') : ['Coord', ''];
+                                const lastName = rest.length > 0 ? rest[rest.length - 1] : '';
+                                coordHtml = `
+                                    <div class="td-coord">
+                                        <div class="coord-av" style="display:flex; align-items:center; justify-content:center; color:white; background:var(--azul-senac);">${initial}</div>
+                                        <span>${firstName}<br>${lastName}</span>
+                                    </div>
+                                `;
+                            }
+
+                            const icons = ['bx-compass', 'bx-code-alt', 'bx-money', 'bx-shield-plus', 'bx-laptop', 'bx-building'];
+                            const randomIcon = icons[curso.name ? curso.name.length % icons.length : 0];
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td>
+                                    <div class="td-nome">
+                                        <div class="icon-box"><i class='bx ${randomIcon}'></i></div>
+                                        <div class="td-nome-info">
+                                            <strong>${curso.name}</strong>
+                                            <small>${curso.modalidade || 'Bacharelado'} • ${curso.semestres || 8} Semestres</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${coordHtml}</td>
+                                <td class="td-data">${dataCriacao}</td>
+                                <td><span class="status-pill ${statusClass}">${statusText}</span></td>
+                                <td></td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+
+                    // Update pagination text
+                    const paginationInfo = document.querySelector('.pagination-text');
+                    if (paginationInfo) {
+                        paginationInfo.innerHTML = `EXIBINDO ${cursos.length} DE ${cursos.length} CURSOS`;
+                    }
+                }
+
+            } catch (err) {
+                console.error("Erro ao carregar dados:", err);
+                const tbody = document.querySelector('table tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px; color: red;">Erro ao carregar dados.</td></tr>';
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>

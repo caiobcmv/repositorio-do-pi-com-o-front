@@ -15,154 +15,238 @@
 
 <body>
     <script>
-        /**
-         * Bloqueia o acesso à página se o usuário não for COORDENADOR ou SUPER_ADMIN.
-         */
-        requireRole('COORDENADOR', 'SUPER_ADMIN');
+        protegerPagina(['COORDENADOR', 'coordinator', 'SUPER_ADMIN', 'super_admin']);
 
-        // Função para gerar as cores das tags de curso automaticamente
         function getCorCurso(cursoNome) {
             const cores = [
-                { bg: 'rgba(139,92,246,.1)', color: '#7c3aed' }, // Roxo
-                { bg: 'rgba(37,99,235,.1)', color: '#2563eb' },  // Azul
-                { bg: 'rgba(245,158,11,.1)', color: '#d4800a' }, // Laranja
-                { bg: 'rgba(16,185,129,.1)', color: '#10b981' }, // Verde
-                { bg: 'rgba(100,116,139,.1)', color: '#64748b' } // Cinza
+                { bg: 'rgba(139,92,246,.1)', color: '#7c3aed' },
+                { bg: 'rgba(37,99,235,.1)', color: '#2563eb' },
+                { bg: 'rgba(245,158,11,.1)', color: '#d4800a' },
+                { bg: 'rgba(16,185,129,.1)', color: '#10b981' },
+                { bg: 'rgba(100,116,139,.1)', color: '#64748b' }
             ];
             let sum = 0;
-            if (cursoNome) {
-                for (let i = 0; i < cursoNome.length; i++) sum += cursoNome.charCodeAt(i);
-            }
+            if (cursoNome) for (let i = 0; i < cursoNome.length; i++) sum += cursoNome.charCodeAt(i);
             return cores[sum % cores.length];
         }
 
+        // ── Estado global ──
+        let todosAlunos = [];
+        let paginaAtual = 1;
+        const POR_PAGINA = 15;
+        let buscaAtual = '';
+        let cursoBuscaAtual = '';
+
         window.addEventListener('DOMContentLoaded', () => {
 
+            // ── Sidebar usuario ──
+            const nome   = localStorage.getItem('nome');
             const perfil = localStorage.getItem('perfil');
+            const labelMap = { 'super_admin':'Super Admin','coordinator':'Coordenador','student':'Aluno' };
 
-            // --- 1. FUNÇÃO PARA DESENHAR A TABELA ---
-            function renderAlunos(alunos) {
-                const tbody = document.querySelector('.tabela-alunos tbody');
-                if (!tbody) return;
+            if (nome) {
+                const nomeEl   = document.getElementById('sidebar-nome-global');
+                const avatarEl = document.getElementById('sidebar-avatar-global');
+                const headerNomeEl = document.getElementById('header-nome-usuario');
+                const headerRoleEl = document.getElementById('header-role-usuario');
+                if (nomeEl)   nomeEl.textContent = nome;
+                if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=0056b3&color=fff`;
+                if (headerNomeEl) headerNomeEl.textContent = nome;
+                if (headerRoleEl) headerRoleEl.textContent = labelMap[perfil?.toLowerCase()] || 'Coordenador';
+            }
+            if (perfil) {
+                const roleEl = document.getElementById('sidebar-role-global');
+                if (roleEl) roleEl.textContent = labelMap[perfil.toLowerCase()] || perfil;
+            }
 
-                tbody.innerHTML = '';
+            carregarDados();
 
-                if (!alunos || alunos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888; padding: 20px;">Nenhum aluno encontrado no banco de dados.</td></tr>';
+            // ── Busca por nome/RA ──
+            let debounce;
+            document.querySelector('.caixa-busca input')?.addEventListener('input', e => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    buscaAtual = e.target.value;
+                    paginaAtual = 1;
+                    renderAlunos();
+                }, 300);
+            });
 
-                    // Zera os contadores
-                    const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
-                    if (totalEl) totalEl.textContent = '0';
-                    return;
-                }
+            // ── Filtro por curso ──
+            document.getElementById('select-curso')?.addEventListener('change', e => {
+                cursoBuscaAtual = e.target.value;
+                paginaAtual = 1;
+                renderAlunos();
+            });
+        });
 
-                // Atualiza KPI Total de Alunos
-                const totalEl = document.querySelector('.kpi-kpi-valor-row h2');
-                if (totalEl) totalEl.textContent = alunos.length.toLocaleString('pt-BR');
+        async function carregarDados() {
+            const perfil = (localStorage.getItem('perfil') || '').toLowerCase();
+            try {
+                if (perfil === 'coordinator') {
+                    // 1. Descobre os cursos do coordenador
+                    const meusCursos = await apiGet('/coordenador/meus-cursos');
+                    const cursos = Array.isArray(meusCursos) ? meusCursos : [];
 
-                alunos.slice(0, 20).forEach(a => {
-                    // Mapeamento seguro (ajuste os nomes conforme vem do seu banco)
-                    const nome = a.nome || a.full_name || 'Sem Nome';
-                    const email = a.email || '—';
-                    const ra = a.ra || a.matricula || a.id || '—';
-                    const semestre = a.semestre || a.periodo || '1';
-                    const statusLabel = a.status ? a.status.toUpperCase() : 'ATIVO';
-
-                    // Trata o curso (pode vir como string ou array igual nos coordenadores)
-                    let curso = a.curso || a.course_name || a.course_names || a.curso_nome || 'Não vinculado';
-                    if (Array.isArray(curso)) {
-                        curso = curso.length > 0 ? curso.join(', ') : 'Não vinculado';
+                    // Popula select de cursos
+                    const select = document.getElementById('select-curso');
+                    if (select) {
+                        cursos.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.name;
+                            select.appendChild(opt);
+                        });
                     }
 
-                    const initials = getInitials(nome);
-                    const colorClass = initialsColor(nome); // bg-azul, bg-laranja, etc.
-                    const corCurso = getCorCurso(curso);
+                    // 2. Busca alunos de todos os cursos do coordenador
+                    const promessas = cursos.map(c =>
+                        apiGet(`/coordenador/alunos/${c.id}`)
+                            .then(lista => (Array.isArray(lista) ? lista : []).map(a => ({ ...a, course_name: c.name, course_id: c.id })))
+                            .catch(() => [])
+                    );
+                    const resultados = await Promise.all(promessas);
+                    todosAlunos = resultados.flat();
 
-                    // Estilo de Status
-                    let statusClass = 'status-ativo';
-                    if (statusLabel === 'TRANCADO' || statusLabel === 'INATIVO') statusClass = 'status-trancado';
-                    if (statusLabel === 'PENDENTE') statusClass = 'status-pendente-bad';
+                } else {
+                    // SUPER_ADMIN: busca todos
+                    const resp = await apiGet('/admin/alunos');
+                    todosAlunos = Array.isArray(resp) ? resp : [];
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+                    // Popula select de cursos para super admin
+                    const cursos = await apiGet('/admin/cursos').catch(() => []);
+                    const select = document.getElementById('select-curso');
+                    if (select && Array.isArray(cursos)) {
+                        cursos.forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            opt.textContent = c.name;
+                            select.appendChild(opt);
+                        });
+                    }
+                }
+
+                renderAlunos();
+
+            } catch(e) {
+                console.error('Erro ao carregar alunos:', e);
+                renderAlunos();
+            }
+        }
+
+        function renderAlunos() {
+            let lista = [...todosAlunos];
+
+            // Filtro de busca texto
+            if (buscaAtual.trim()) {
+                const q = buscaAtual.toLowerCase();
+                lista = lista.filter(a =>
+                    (a.full_name || '').toLowerCase().includes(q) ||
+                    (a.ra || '').toLowerCase().includes(q) ||
+                    (a.email || '').toLowerCase().includes(q)
+                );
+            }
+
+            // Filtro de curso
+            if (cursoBuscaAtual) {
+                lista = lista.filter(a => String(a.course_id) === String(cursoBuscaAtual));
+            }
+
+            // KPIs
+            const kpis = document.querySelectorAll('.kpi-kpi-valor-row h2');
+            if (kpis.length >= 2) {
+                kpis[0].textContent = todosAlunos.length.toLocaleString('pt-BR');
+                const ativos = todosAlunos.filter(a => (a.status_matricula || a.status || 'ativo').toLowerCase() === 'ativo').length;
+                kpis[1].textContent = ativos.toLocaleString('pt-BR');
+            }
+
+            // Paginação
+            const total = lista.length;
+            const totalPags = Math.ceil(total / POR_PAGINA) || 1;
+            if (paginaAtual > totalPags) paginaAtual = 1;
+            const inicio = (paginaAtual - 1) * POR_PAGINA;
+            const paginados = lista.slice(inicio, inicio + POR_PAGINA);
+
+            // Info
+            const infoEl = document.querySelector('.info-listagem span');
+            if (infoEl) infoEl.textContent = total === 0
+                ? 'Nenhum aluno encontrado'
+                : `Exibindo ${inicio + 1}-${Math.min(inicio + POR_PAGINA, total)} de ${total.toLocaleString()} alunos`;
+
+            // Paginação controles
+            renderPaginacao(totalPags);
+
+            // Tabela
+            const tbody = document.querySelector('.tabela-alunos tbody');
+            if (!tbody) return;
+
+            if (paginados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:30px;">Nenhum aluno encontrado no banco de dados.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = paginados.map(a => {
+                const nome = a.full_name || 'Sem Nome';
+                const ra   = a.ra || a.id || '—';
+                const curso = a.course_name || 'Não vinculado';
+                const semestre = a.semestre || '1';
+                const statusRaw = (a.status_matricula || a.status || 'ativo').toLowerCase();
+                const statusLabel = statusRaw === 'ativo' ? 'ATIVO' : statusRaw === 'trancado' ? 'TRANCADO' : statusRaw.toUpperCase();
+                const statusClass = statusRaw === 'ativo' ? 'status-ativo' : 'status-trancado';
+                const initials = nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+                const corCurso = getCorCurso(curso);
+                const bgColors = ['#0056b3','#f6821f','#7c3aed','#10b981','#ef4444'];
+                const bgColor  = bgColors[nome.charCodeAt(0) % bgColors.length];
+
+                return `
+                    <tr>
                         <td>
                             <div class="td-aluno-row">
-                                <div class="avatar-circle ${colorClass}">${initials}</div>
+                                <div class="avatar-circle" style="background:${bgColor};color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${initials}</div>
                                 <div>
                                     <strong>${nome}</strong>
-                                    <span class="email-aluno">${email}</span>
+                                    <span class="email-aluno">${a.email || '—'}</span>
                                 </div>
                             </div>
                         </td>
                         <td class="td-ra">${ra}</td>
                         <td>
-                            <span class="tag-curso-aluno" style="background: ${corCurso.bg}; color: ${corCurso.color};">
-                                ${curso}
-                            </span>
+                            <span class="tag-curso-aluno" style="background:${corCurso.bg};color:${corCurso.color};">${curso}</span>
                         </td>
                         <td class="td-semestre">${semestre}º</td>
                         <td>
                             <span class="status-badge-aluno ${statusClass}">
                                 <i class='bx bx-circle-fill' style="font-size:7px"></i> ${statusLabel}
                             </span>
-                        </td>`;
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
 
-                    tbody.appendChild(tr);
-                });
+        function renderPaginacao(totalPags) {
+            const wrap = document.querySelector('.paginacao-botoes');
+            const info = document.querySelector('.info-paginacao');
+            if (!wrap) return;
 
-                const infoListagem = document.querySelector('.info-listagem span');
-                if (infoListagem) infoListagem.textContent = `Exibindo 1-${Math.min(alunos.length, 20)} de ${alunos.length.toLocaleString()} alunos`;
-            }
-
-            // --- 2. FUNÇÃO CENTRAL DE BUSCA ---
-            const fetchAlunos = () => {
-                // Busca Cursos para o Filtro
-                apiGet('/admin/cursos').then(cursos => {
-                    const select = document.querySelector('.select-filtro-grande');
-                    if (select && cursos && Array.isArray(cursos)) {
-                        cursos.forEach(c => {
-                            const opt = document.createElement('option');
-                            opt.textContent = c.nome_curso || c.nome || c.course_name;
-                            select.appendChild(opt);
-                        });
-                    }
-                }).catch(err => console.error("Filtro de cursos falhou silenciosamente", err));
-
-                // Lógica de busca de alunos
-                if (perfil === 'COORDENADOR') {
-                    apiGet('/aluno/meus-dados').then(me => {
-                        if (me && me.aluno && me.aluno.curso_id) {
-                            apiGet(`/coordenador/alunos/${me.aluno.curso_id}`).then(alunos => {
-                                let lista = Array.isArray(alunos) ? alunos : (alunos.data || alunos.alunos || []);
-                                renderAlunos(lista);
-                            }).catch(() => renderAlunos([]));
-                        } else {
-                            renderAlunos([]);
-                        }
-                    }).catch(() => renderAlunos([]));
-                } else {
-                    // Rota para SUPER_ADMIN (busca todos)
-                    apiGet('/admin/alunos').then(resposta => {
-                        console.log("Chegou da API de Alunos:", resposta);
-                        let lista = [];
-                        if (Array.isArray(resposta)) {
-                            lista = resposta;
-                        } else if (resposta && Array.isArray(resposta.data)) {
-                            lista = resposta.data;
-                        } else if (resposta && Array.isArray(resposta.alunos)) {
-                            lista = resposta.alunos;
-                        }
-                        renderAlunos(lista);
-                    }).catch(err => {
-                        console.error("A rota /admin/alunos falhou no backend", err);
-                        renderAlunos([]);
-                    });
+            let html = `<button class="btn-pag" onclick="mudarPag(${paginaAtual-1})" ${paginaAtual<=1?'disabled':''}><i class='bx bx-chevron-left'></i></button>`;
+            for (let i = 1; i <= totalPags; i++) {
+                if (totalPags > 7 && i > 3 && i < totalPags - 1 && Math.abs(i - paginaAtual) > 1) {
+                    if (i === 4) html += '<button class="btn-pag" disabled>...</button>';
+                    continue;
                 }
-            };
+                html += `<button class="btn-pag ${i===paginaAtual?'active':''}" onclick="mudarPag(${i})">${i}</button>`;
+            }
+            html += `<button class="btn-pag" onclick="mudarPag(${paginaAtual+1})" ${paginaAtual>=totalPags?'disabled':''}><i class='bx bx-chevron-right'></i></button>`;
+            wrap.innerHTML = html;
+            if (info) info.textContent = `PÁGINA ${paginaAtual} DE ${totalPags}`;
+        }
 
-            // Aciona a busca
-            fetchAlunos();
-        });
+        function mudarPag(n) {
+            paginaAtual = n;
+            renderAlunos();
+            document.querySelector('.tabela-alunos')?.scrollIntoView({ behavior: 'smooth' });
+        }
     </script>
 
     <div class="layout-geral">
@@ -198,21 +282,8 @@
             </div>
         </aside>
 
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                if (localStorage.getItem('nome')) {
-                    const nomeEl = document.getElementById('sidebar-nome-global');
-                    if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
+        <!-- sidebar script agora dentro do DOMContentLoaded principal acima -->
 
-                    const avatarEl = document.getElementById('sidebar-avatar-global');
-                    if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
-                }
-                if (localStorage.getItem('perfil')) {
-                    const roleEl = document.getElementById('sidebar-role-global');
-                    if (roleEl) roleEl.textContent = localStorage.getItem('perfil');
-                }
-            });
-        </script>
 
         <main class="conteudo-principal">
 
@@ -228,8 +299,8 @@
                 <div class="acoes-usuario">
                     <i class='bx bx-bell icon-header'></i>
                     <div class="perfil-info">
-                        <strong>Admin Principal</strong>
-                        <small>Super Admin</small>
+                        <strong id="header-nome-usuario">Carregando...</strong>
+                        <small id="header-role-usuario">Coordenador</small>
                     </div>
                     <div class="foto-perfil"></div>
                 </div>
@@ -291,14 +362,17 @@
                     <div class="grupo-filtro-linha">
                         <div class="campo-filtro">
                             <label>Filtrar por Curso</label>
-                            <select class="select-filtro-grande">
-                                <option>Todos os Cursos</option>
+                            <select class="select-filtro-grande" id="select-curso">
+                                <option value="">Todos os Cursos</option>
                             </select>
                         </div>
                         <div class="campo-filtro">
                             <label>Semestre</label>
-                            <select class="select-filtro-grande">
-                                <option>2024.1</option>
+                            <select class="select-filtro-grande" id="select-semestre">
+                                <option value="">Todos</option>
+                                <option value="1">2024.1</option>
+                                <option value="2">2024.2</option>
+                                <option value="3">2025.1</option>
                             </select>
                         </div>
                     </div>

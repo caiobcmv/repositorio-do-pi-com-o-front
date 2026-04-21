@@ -59,7 +59,7 @@
                         }
                     }).catch(() => fallbackTable());
                 } else {
-                    fallbackTable();
+                    renderTable([], { pendentes: 0, aprovadas: 0, reprovadas: 0, total: 0 });
                 }
             }).catch(() => fallbackTable());
 
@@ -121,6 +121,11 @@
             }
 
             function fallbackTable() {
+                const kpiPendentes = document.getElementById('kpi-pendentes');
+                const kpiProcessados = document.getElementById('kpi-processados');
+                if (kpiPendentes && kpiPendentes.textContent === '...') kpiPendentes.textContent = '0';
+                if (kpiProcessados && kpiProcessados.textContent === '...') kpiProcessados.textContent = '0';
+
                 const tabelaBody = document.getElementById('tabela-body');
                 if (tabelaBody) tabelaBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:20px; color:#ef4444;">Erro ao carregar dados.</td></tr>';
             }

@@ -6,7 +6,7 @@ exports.getRelatorios = async (req, res) => {
     try {
         let course_ids = [];
 
-        console.log("👉 [Relatorios API] Iniciando requisição para usuário:", req.usuario);
+        console.log(" [Relatorios API] Iniciando requisição para usuário:", req.usuario);
 
         // Normalize roles from whatever token format they might have cached
         let userRoles = [];
@@ -18,12 +18,12 @@ exports.getRelatorios = async (req, res) => {
         const isSuperAdmin = userRoles.some(p => p.toLowerCase() === 'super_admin' || p.toLowerCase() === 'admin');
 
         if (isSuperAdmin) {
-            console.log("👉 [Relatorios API] Usuário detectado como Super Admin. Buscando todos os cursos.");
+            console.log(" [Relatorios API] Usuário detectado como Super Admin. Buscando todos os cursos.");
             // Se for SUPER_ADMIN, busca todos os cursos ativos do sistema
             const todosCursos = await pool.query(`SELECT id FROM courses WHERE is_active = true`);
             course_ids = todosCursos.rows.map(r => r.id);
         } else {
-            console.log("👉 [Relatorios API] Usuário coordenador convencional. Buscando seus cursos alocados.");
+            console.log(" [Relatorios API] Usuário coordenador convencional. Buscando seus cursos alocados.");
             // Busca apenas os cursos vinculados a esse coordenador
             const cursosDoCoordenador = await pool.query(
                 `SELECT course_id FROM course_coordinators

@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
@@ -15,5 +15,16 @@ router.delete('/coordenador/:id', authMiddleware(['super_admin']), adminControll
 
 router.get('/submissoes', authMiddleware(['super_admin']), adminController.getListaSubmissoes);
 router.get('/alunos', authMiddleware(['super_admin']), adminController.getListaAlunos);
+
+// Categorias (tipos de atividade)
+router.get('/categorias', authMiddleware(['super_admin']), adminController.getListaCategorias);
+router.post('/categoria', authMiddleware(['super_admin']), adminController.postCriarCategoria);
+router.delete('/categoria/:id', authMiddleware(['super_admin']), adminController.deleteCategoria);
+
+// Logs de auditoria
+router.get('/logs', authMiddleware(['super_admin']), adminController.getLogs);
+
+// Limites por curso
+router.get('/limites-cursos', authMiddleware(['super_admin']), adminController.getLimitesCursos);
 
 module.exports = router;

@@ -204,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSuperAdmin) {
             links = [
                 { href: 'cursosuperadm.html', icon: 'bx-book', text: 'Cursos' },
-                { href: 'alunos.html', icon: 'bx-group', text: 'Alunos' },
                 { href: 'coordenadores.html', icon: 'bx-user-voice', text: 'Coordenadores' },
                 { href: 'submissoes_superadmin.html', icon: 'bx-check-square', text: 'Submissões' },
                 { href: 'configadm.html', icon: 'bx-cog', text: 'Configurações' }

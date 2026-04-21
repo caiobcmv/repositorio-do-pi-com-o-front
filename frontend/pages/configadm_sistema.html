@@ -32,7 +32,6 @@
 
             <nav class="menu-navegacao">
                 <a href="cursosuperadm.html" class="link-menu"><i class='bx bx-book'></i> Cursos</a>
-                <a href="alunos.html" class="link-menu"><i class='bx bx-group'></i> Alunos</a>
                 <a href="coordenadores.html" class="link-menu"><i class='bx bx-user-voice'></i> Coordenadores</a>
                 <a href="submissoes_superadmin.html" class="link-menu"><i class='bx bx-check-square'></i> Submissões</a>
                 <a href="configadm.html" class="link-menu"><i class='bx bx-cog'></i> Configurações</a>
@@ -53,20 +52,38 @@
             </div>
         </aside>
 
-        <!-- Script para ativar a aba atual e carregar dados do usuário -->
+        <!-- Script: carrega dados do usuário logado na sidebar -->
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                if (localStorage.getItem('nome')) {
+                const nome   = localStorage.getItem('nome');
+                const perfil = localStorage.getItem('perfil');
+
+                const labelMap = {
+                    'super_admin': 'Super Admin',
+                    'admin':       'Super Admin',
+                    'coordinator': 'Coordenador',
+                    'coordenador': 'Coordenador',
+                    'student':     'Aluno'
+                };
+
+                if (nome) {
                     const nomeEl = document.getElementById('sidebar-nome-global');
-                    if (nomeEl) nomeEl.textContent = localStorage.getItem('nome');
+                    if (nomeEl) nomeEl.textContent = nome;
 
                     const avatarEl = document.getElementById('sidebar-avatar-global');
-                    if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(localStorage.getItem('nome')) + '&background=0056b3&color=fff';
+                    if (avatarEl) avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(nome) + '&background=0056b3&color=fff';
                 }
-                if (localStorage.getItem('perfil')) {
+
+                if (perfil) {
                     const roleEl = document.getElementById('sidebar-role-global');
-                    if (roleEl) roleEl.textContent = localStorage.getItem('perfil');
+                    if (roleEl) roleEl.textContent = labelMap[perfil.toLowerCase()] || perfil;
                 }
+
+                // Marca link ativo da sidebar
+                const currentPage = window.location.pathname.split('/').pop();
+                document.querySelectorAll('.menu-navegacao .link-menu').forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href') === currentPage);
+                });
             });
         </script>
 

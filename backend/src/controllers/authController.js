@@ -48,6 +48,8 @@ exports.login = async (req, res) => {
             mensagem: "Login realizado com sucesso!",
             token,
             perfis: usuario.roles,
+            nome: usuario.full_name,
+            email: usuario.email,
             primeiroAcesso
         });
 

@@ -61,8 +61,8 @@
                 apiGet('/aluno/submissoes').then(subs => {
                     if (subs && Array.isArray(subs)) {
                         renderGrid(subs);
-                    } else { 
-                        fallbackGrid(); 
+                    } else {
+                        fallbackGrid();
                     }
                 }).catch(() => fallbackGrid());
             }
