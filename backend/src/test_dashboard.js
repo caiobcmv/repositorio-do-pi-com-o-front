@@ -1,36 +1,12 @@
-const pool = require('../config/database');
-
-exports.getDashboardCoordenador = async (req, res) => {
-    const user_id = req.usuario.id;
-    console.log(`👉 [Dashboard API] Dashboard Administrativo requisitado pelo usuário ${user_id}`);
-
+const pool = require('./config/database');
+async function run() {
     try {
-        let course_ids = [];
-
-        if (req.usuario.perfis && req.usuario.perfis.includes('super_admin')) {
-            // Super admin tem acesso a todos os cursos
-            const todosCursos = await pool.query(`SELECT id FROM courses WHERE is_active = true`);
-            course_ids = todosCursos.rows.map(r => r.id);
-        } else {
-            // Coordenador só vê seus cursos
-            const cursosDoCoordenador = await pool.query(
-                `SELECT course_id FROM course_coordinators
-                 WHERE user_id = $1 AND is_active = true`,
-                [user_id]
-            );
-            course_ids = cursosDoCoordenador.rows.map(r => r.course_id);
-        }
-
-        if (course_ids.length === 0) {
-            return res.status(200).json({
-                metricas: { pendentes: 0, aprovadas: 0, reprovadas: 0, media_horas: 0 },
-                total_alunos: 0,
-                total_cursos: 0,
-                por_categoria: [],
-                cursos_mais_envios: [],
-                ultimas_atividades: []
-            });
-        }
+        const user_id = 1; // Assuming SUPER_ADMIN is 1
+        const todosCursos = await pool.query(`SELECT id FROM courses WHERE is_active = true`);
+        let course_ids = todosCursos.rows.map(r => r.id);
+        
+        console.log("course_ids:", course_ids);
+        if (course_ids.length === 0) return;
 
         const metricas = await pool.query(
             `SELECT
@@ -43,6 +19,7 @@ exports.getDashboardCoordenador = async (req, res) => {
              WHERE uc.course_id = ANY($1)`,
             [course_ids]
         );
+        console.log("metricas:", metricas.rows);
 
         const alunos = await pool.query(
             `SELECT COUNT(DISTINCT uc.user_id) AS total_alunos
@@ -54,8 +31,7 @@ exports.getDashboardCoordenador = async (req, res) => {
              AND uc.is_active = true`,
             [course_ids]
         );
-
-        const totalCursos = course_ids.length;
+        console.log("alunos:", alunos.rows);
 
         const porCategoria = await pool.query(
             `SELECT
@@ -69,7 +45,7 @@ exports.getDashboardCoordenador = async (req, res) => {
              ORDER BY total DESC`,
             [course_ids]
         );
-
+        console.log("porCategoria:", porCategoria.rows);
         const cursosMaisEnvios = await pool.query(
             `SELECT
                 c.name AS nome_curso,
@@ -83,6 +59,7 @@ exports.getDashboardCoordenador = async (req, res) => {
              LIMIT 5`,
             [course_ids]
         );
+        console.log("cursosMaisEnvios:", cursosMaisEnvios.rows);
 
         const ultimasAtividades = await pool.query(
             `SELECT
@@ -101,17 +78,12 @@ exports.getDashboardCoordenador = async (req, res) => {
              LIMIT 5`,
             [course_ids]
         );
-
-        res.status(200).json({
-            metricas: metricas.rows[0],
-            total_alunos: parseInt(alunos.rows[0].total_alunos),
-            total_cursos: totalCursos,
-            por_categoria: porCategoria.rows,
-            cursos_mais_envios: cursosMaisEnvios.rows,
-            ultimas_atividades: ultimasAtividades.rows
-        });
-
-    } catch (err) {
-        res.status(500).json({ erro: err.message });
+        console.log("ultimasAtividades:", ultimasAtividades.rows);
+        
+        process.exit(0);
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
     }
-};
+}
+run();
